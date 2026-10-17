@@ -8,8 +8,8 @@ const SUPABASE_STORAGE_KEY = 'PIG_SIM_SUPABASE_CONFIG_V1';
 
 // 預設配置 (請填入您的 Supabase 專案設定，或於遊戲內設定視窗直接輸入保存)
 const DEFAULT_SUPABASE_CONFIG = {
-    // 例如：https://your-project-id.supabase.co
-    supabaseUrl: '',
+    // 依據使用者的 Supabase Project Ref (onbuzgtvbpvptpocwzdb) 設定
+    supabaseUrl: 'https://onbuzgtvbpvptpocwzdb.supabase.co',
     // 例如：eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     supabaseAnonKey: ''
 };
