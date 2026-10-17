@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>3D 皇家小豬牧場 - 高精細公仔物理養成與 1023 食譜模擬</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐷</text></svg>">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Noto Sans TC -->
@@ -803,6 +804,8 @@
                 </div>
             </div>
         </div>
+    </div>
+
     <!-- Modal: Piggy Combat / Expedition Battle System (野豬遠征冒險) -->
     <div id="modal-battle" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
         <div class="hud-glass w-full max-w-4xl max-h-[92vh] rounded-3xl flex flex-col overflow-hidden border border-red-500/40 shadow-2xl">
@@ -3037,8 +3040,7 @@
                     clearcoat: 0.32,
                     clearcoatRoughness: 0.16,
                     reflectivity: 0.22,
-                    sheen: new THREE.Color(0xfb7185),
-                    sheenRoughness: 0.35
+                    sheen: new THREE.Color(0xfb7185)
                 });
 
                 this.bodyMesh = new THREE.Mesh(geo, this.skinMat);
