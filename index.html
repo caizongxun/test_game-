@@ -21,6 +21,16 @@
     <script src="supabase-config.js"></script>
     <script src="supabase-service.js"></script>
 
+    <!-- Modular Game Systems -->
+    <script src="js/constants.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/pig.js"></script>
+    <script src="js/interactions.js"></script>
+    <script src="js/farm.js"></script>
+    <script src="js/battle.js"></script>
+    <script src="js/ui.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -208,7 +218,15 @@
     <div id="feedback-layer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
 
     <!-- ==================== DESKTOP UI (md and above) ==================== -->
-    <aside id="desktop-left-panel" class="hidden md:block fixed top-3 left-3 z-20 w-80 hud-glass rounded-2xl p-3.5 transition-all">
+    <aside id="desktop-left-panel" class="hidden md:block fixed top-3 left-3 z-20 w-84 hud-glass rounded-2xl p-3.5 transition-all">
+        <!-- Multi-Pig Roster Bar -->
+        <div class="mb-2.5 pb-2 border-b border-slate-700/70">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-300 mb-1.5">
+                <span>🐷 牧場家族群豬陣容</span>
+            </div>
+            <div id="pig-roster-bar" class="flex items-center gap-1.5 overflow-x-auto py-1 pr-1"></div>
+        </div>
+
         <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-700/70">
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shadow-md shrink-0">
@@ -339,6 +357,11 @@
             <!-- Open Battle / Expedition -->
             <button id="btn-open-battle-desktop" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-black text-xs shadow-lg transition flex items-center gap-1.5 animate-pulse">
                 <span>⚔️ 野豬遠征冒險</span>
+            </button>
+
+            <!-- Open Farmland Agriculture -->
+            <button id="btn-open-farm-desktop" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg transition flex items-center gap-1.5">
+                <span>🌾 皇家農田</span>
             </button>
 
             <!-- Open Shop & 24 Toys -->
@@ -541,14 +564,28 @@
         </div>
     </div>
 
+    <!-- Floating Camera Control D-Pad & Focus Widget -->
+    <div id="camera-control-widget" class="fixed right-3 bottom-16 md:bottom-5 z-20 flex flex-col items-center gap-1 bg-slate-900/85 backdrop-blur-md p-2 rounded-2xl border border-slate-700/80 shadow-2xl">
+        <div class="text-[10px] font-bold text-slate-400">視角平移</div>
+        <button id="btn-cam-pan-up" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">⬆️</button>
+        <div class="flex items-center gap-1">
+            <button id="btn-cam-pan-left" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">⬅️</button>
+            <button id="btn-cam-focus-pig" title="聚焦小豬" class="w-8 h-8 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center justify-center transition shadow">🐷</button>
+            <button id="btn-cam-pan-right" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">➡️</button>
+        </div>
+        <button id="btn-cam-pan-down" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">⬇️</button>
+        <button id="btn-cam-reset-overview" class="mt-0.5 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 font-bold border border-slate-700 transition">全景</button>
+    </div>
+
     <!-- Mobile Bottom Tab Bar -->
-    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-2 inset-x-2 z-20 hud-glass rounded-2xl p-1.5 grid grid-cols-6 gap-1 text-[11px] font-bold">
-        <button data-mtab="feed" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">餵食料理</button>
-        <button data-mtab="battle" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-rose-300 font-black transition">遠征戰鬥</button>
-        <button data-mtab="shop" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">商店武庫</button>
-        <button data-mtab="upgrades" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">賺錢升級</button>
-        <button data-mtab="biomes" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">更換背景</button>
-        <button data-mtab="nav" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">區域導航</button>
+    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-2 inset-x-2 z-20 hud-glass rounded-2xl p-1.5 grid grid-cols-7 gap-1 text-[11px] font-bold">
+        <button data-mtab="feed" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">餵食</button>
+        <button data-mtab="farm" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-emerald-300 font-black transition">農田</button>
+        <button data-mtab="battle" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-rose-300 font-black transition">遠征</button>
+        <button data-mtab="shop" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">商店</button>
+        <button data-mtab="upgrades" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">升級</button>
+        <button data-mtab="biomes" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">背景</button>
+        <button data-mtab="nav" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">導航</button>
     </nav>
 
     <!-- Modal 0: Unified Ranch Shop (食材採購 / 24種精細玩具 / 賺錢升級 / 6大場景) -->
@@ -574,6 +611,12 @@
             <div class="px-4 sm:px-6 py-2.5 bg-slate-900/40 border-b border-slate-800 flex flex-wrap gap-2 text-xs">
                 <button data-shoptab="toys" class="shop-tab-btn active px-3.5 py-1.5 rounded-xl border border-slate-700 text-slate-200 transition">
                     🧸 3D玩具 (24款)
+                </button>
+                <button data-shoptab="wardrobe" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-pink-300 font-bold transition">
+                    👗 潮流服裝 (7套)
+                </button>
+                <button data-shoptab="dyes" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-teal-300 font-bold transition">
+                    🎨 毛色染色工坊
                 </button>
                 <button data-shoptab="armory" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-rose-300 font-bold transition">
                     ⚔️ 神兵武庫 (武器防具)
@@ -918,8 +961,97 @@
                     </button>
                     <button id="btn-battle-heal" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow transition flex flex-col items-center">
                         <span class="text-sm" id="b-btn-heal-label">🍖 鮮食急救 (剩3次)</span>
-                        <span class="text-[10px] text-emerald-200 mt-0.5">消耗鮮食或15金幣 · 回復35%</span>
+                        <span class="text-[10px] text-emerald-200 mt-0.5">回復38%最大生命值</span>
                     </button>
+                </div>
+
+                <!-- Potions Belt & Forge Upgrades -->
+                <div class="pt-3 border-t border-slate-800 space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-black text-amber-300">🧪 戰鬥補給藥劑 (點擊立即生效)</span>
+                        <div class="flex items-center gap-2">
+                            <button id="btn-forge-weapon" class="px-3 py-1 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/50 text-rose-300 text-xs font-black transition">
+                                ⚔️ 重鑄武器 +1
+                            </button>
+                            <button id="btn-forge-shield" class="px-3 py-1 rounded-xl bg-sky-500/25 hover:bg-sky-500/40 border border-sky-400/50 text-sky-300 text-xs font-black transition">
+                                🛡️ 重鑄護甲 +1
+                            </button>
+                        </div>
+                    </div>
+                    <div id="battle-potions-belt" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Pig Adoption (領養新小豬) -->
+    <div id="modal-adopt" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="hud-glass w-full max-w-md rounded-3xl p-5 border border-amber-500/40 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🐷</span>
+                    <h3 class="text-base font-black text-white">領養全新小豬夥伴</h3>
+                </div>
+                <button id="btn-close-adopt" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">✕</button>
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1">為新小豬命名：</label>
+                <input id="input-adopt-pig-name" type="text" placeholder="例如：圓滾滾、金發發" maxlength="10" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-amber-400" />
+            </div>
+            <div>
+                <label class="text-xs text-slate-400 block mb-1">選擇優質小豬品種：</label>
+                <div id="adopt-breeds-list" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-amber-400/30 flex items-center justify-between text-xs font-bold text-amber-300">
+                <span>領養費用：</span>
+                <span id="adopt-cost-display">800 金幣</span>
+            </div>
+            <button id="btn-confirm-adopt" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 text-slate-950 font-black text-xs shadow-lg transition">
+                確認領養並放入牧場
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Farmland Agriculture (皇家農產農莊) -->
+    <div id="modal-farm" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
+        <div class="hud-glass w-full max-w-4xl max-h-[92vh] rounded-3xl flex flex-col overflow-hidden border border-emerald-500/40 shadow-2xl">
+            <!-- Header -->
+            <div class="p-3.5 sm:px-6 border-b border-slate-700/80 flex items-center justify-between bg-gradient-to-r from-emerald-950/80 via-slate-900/90 to-slate-900/80">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">🌾</span>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                            <span>皇家農產農莊與批發市場</span>
+                        </h2>
+                        <p class="text-[11px] text-slate-400">開墾耕地、播種優質作物，澆水催熟加速成長！小豬將主動協助收割，產出可存入食材庫或批量變賣巨額金幣！</p>
+                    </div>
+                </div>
+                <button id="btn-close-farm" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 text-xs font-bold transition">
+                    關閉
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5">
+                <!-- 6 Farmland Plots Grid -->
+                <div>
+                    <h3 class="text-xs font-black text-emerald-300 mb-2.5 flex items-center gap-1.5">
+                        <span>🌱 牧場田地地塊管理 (共 6 塊)</span>
+                    </h3>
+                    <div id="farm-plots-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
+                </div>
+
+                <!-- Warehouse Wholesale Section -->
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-700/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-black text-amber-300">📦 農產庫存與批發收購市場</h3>
+                            <p class="text-[10px] text-slate-400">收割的農作物會存放於庫存，可用於食槽料理烹飪，亦可批發賣給市場賺取巨額金幣！</p>
+                        </div>
+                        <button id="btn-farm-sell-all" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 text-slate-950 font-black text-xs shadow transition">
+                            💰 一鍵賣出所有盈餘作物
+                        </button>
+                    </div>
+                    <div id="farm-stock-summary" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
                 </div>
             </div>
         </div>
@@ -940,360 +1072,19 @@
 
     <script>
         /********************************************************************
-         * 2. 10 INGREDIENTS, 24 TOYS, 6 BIOMES, UPGRADES & 1023 RECIPES
+         * 2. DATA CONSTANTS & GAME STATE (Loaded from js/constants.js & js/state.js)
          ********************************************************************/
-        const INGREDIENTS = [
-            { code: 'A', bit: 1,   name: '紅富士蘋果', short: '蘋果',   price: 10,  color: '#ef4444', accent: '#22c55e', hunger: 12, mood: 8,  energy: 6,  weight: 0.25, flavor: '果香清甜' },
-            { code: 'B', bit: 2,   name: '鮮嫩胡蘿蔔', short: '胡蘿蔔', price: 12,  color: '#f97316', accent: '#16a34a', hunger: 14, mood: 6,  energy: 9,  weight: 0.22, flavor: '爽脆甘甜' },
-            { code: 'C', bit: 4,   name: '黃金甜玉米', short: '甜玉米', price: 18,  color: '#facc15', accent: '#65a30d', hunger: 18, mood: 9,  energy: 11, weight: 0.38, flavor: '濃郁穀香' },
-            { code: 'D', bit: 8,   name: '栗子奶油南瓜', short: '南瓜', price: 24,  color: '#ea580c', accent: '#a16207', hunger: 22, mood: 10, energy: 8,  weight: 0.48, flavor: '綿密奶香' },
-            { code: 'E', bit: 16,  name: '森林紅傘菇', short: '紅傘菇', price: 28,  color: '#dc2626', accent: '#fef08a', hunger: 11, mood: 14, energy: 15, weight: 0.18, flavor: '山林鮮味' },
-            { code: 'F', bit: 32,  name: '橡木果實',   short: '橡實',   price: 35,  color: '#92400e', accent: '#d97706', hunger: 19, mood: 11, energy: 14, weight: 0.42, flavor: '堅果醇厚' },
-            { code: 'G', bit: 64,  name: '翠綠西瓜切片', short: '西瓜', price: 42,  color: '#f43f5e', accent: '#16a34a', hunger: 15, mood: 18, energy: 12, weight: 0.30, flavor: '冰涼多汁' },
-            { code: 'H', bit: 128, name: '紫心蜜番薯', short: '紫番薯', price: 50,  color: '#9333ea', accent: '#f59e0b', hunger: 24, mood: 9,  energy: 10, weight: 0.52, flavor: '鬆軟蜜香' },
-            { code: 'I', bit: 256, name: '青綠花椰菜', short: '花椰菜', price: 65,  color: '#15803d', accent: '#86efac', hunger: 13, mood: 7,  energy: 18, weight: 0.15, flavor: '翠綠高纖' },
-            { code: 'J', bit: 512, name: '頂級黑松露', short: '黑松露', price: 110, color: '#334155', accent: '#fbbf24', hunger: 20, mood: 26, energy: 22, weight: 0.45, flavor: '皇家鑽香' }
-        ];
-
-        const TOYS_CATALOG = [
-            { id: 'soccer',        name: '經典綠茵足球',     price: 0,    passiveCoin: 1,  desc: '預設牧場彈力球，小豬最愛頂著跑' },
-            { id: 'bowling',       name: '皇家木製保齡球瓶', price: 60,   passiveCoin: 2,  desc: '圓潤白紅相間球瓶，撞倒可獲額外喝采' },
-            { id: 'beachball',     name: '六彩海灘充氣球',   price: 90,   passiveCoin: 2,  desc: '輕盈高彈性的彩色條紋大球' },
-            { id: 'ducky',         name: '巨型黃色洗澡鴨',   price: 130,  passiveCoin: 3,  desc: '圓滾滾的療癒小鴨玩偶' },
-            { id: 'stacker',       name: '彩虹木製疊疊塔',   price: 180,  passiveCoin: 4,  desc: '五層繽紛圓環套柱木玩' },
-            { id: 'pinecone',      name: '森林巨型松果滾筒', price: 240,  passiveCoin: 5,  desc: '散發木質香氣的多層鱗片松果' },
-            { id: 'cheese',        name: '瑞士氣孔大起司輪', price: 310,  passiveCoin: 6,  desc: '金黃濃郁的立體起司滾輪玩具' },
-            { id: 'strawberry',    name: '絨毛紅草莓抱枕',   price: 390,  passiveCoin: 8,  desc: '柔軟帶綠蒂與果籽的巨型草莓墊' },
-            { id: 'lollipop',      name: '雙色螺旋大棒棒糖', price: 480,  passiveCoin: 9,  desc: '粉白相間的夢幻甜點模型玩具' },
-            { id: 'dumbbell',      name: '大力士雙球啞鈴',   price: 580,  passiveCoin: 11, desc: '鍛鍊小豬肩胛肌肉的重量級玩具' },
-            { id: 'xylophone',     name: '彩色八音敲擊木琴', price: 700,  passiveCoin: 13, desc: '五彩木鍵琴架，碰觸時清脆悅耳' },
-            { id: 'rocking_horse', name: '復古紅白搖搖木馬', price: 850,  passiveCoin: 16, desc: '帶弧形底座的精緻木雕小馬' },
-            { id: 'train',         name: '牧場蒸汽小火車頭', price: 1020, passiveCoin: 19, desc: '附煙囪與四輪的經典木造火車' },
-            { id: 'chess_king',    name: '皇家西洋棋國王',   price: 1200, passiveCoin: 22, desc: '高聳雕刻王冠十字的巨型棋子' },
-            { id: 'cake',          name: '雙層奶油生日蛋糕', price: 1450, passiveCoin: 26, desc: '點綴鮮紅草莓與蠟燭的慶典模型' },
-            { id: 'saxophone',     name: '黃金爵士薩克斯風', price: 1750, passiveCoin: 31, desc: '彎管喇叭造型的閃耀音樂玩具' },
-            { id: 'treasure',      name: '海盜黃金寶藏木箱', price: 2100, passiveCoin: 37, desc: '鑲有金邊與鎖扣的圓頂尋寶箱' },
-            { id: 'gramophone',    name: '古典銅號留聲機',   price: 2500, passiveCoin: 44, desc: '胡桃木底座搭配金色喇叭號角' },
-            { id: 'rocket',        name: '紅白星際探險火箭', price: 3000, passiveCoin: 52, desc: '流線鼻錐與三翼推進尾翼模型' },
-            { id: 'crystal_ball',  name: '星象占卜紫水晶球', price: 3600, passiveCoin: 62, desc: '底座鑲金的神秘剔透能量球' },
-            { id: 'carousel',      name: '皇家迷你旋轉木馬', price: 4400, passiveCoin: 75, desc: '華麗圓頂帳篷與三柱旋轉座' },
-            { id: 'mecha_pig',     name: '純金發條機械小豬', price: 5400, passiveCoin: 90, desc: '背部附大型發條鑰匙的精密金豬' },
-            { id: 'jade_cabbage',  name: '翠玉白菜珍寶擺件', price: 6800, passiveCoin: 115, desc: '潔白菜梗與翠綠葉簇的皇家奇珍' },
-            { id: 'gold_statue',   name: '至尊純金招財豬尊', price: 9200, passiveCoin: 160, desc: '大理石基座上的頂級黃金小豬聖像' }
-        ];
-
-        const UPGRADES_CATALOG = [
-            { id: 'touch_power', name: '絲絨按摩手套',     baseCost: 50,   costMult: 1.55, type: 'touch', bonus: 2,  desc: '每次滑動撫摸小豬獲得的金幣 +2' },
-            { id: 'touch_crit',  name: '皇家精油推拿術',   baseCost: 140,  costMult: 1.65, type: 'touch', bonus: 5,  desc: '深層放鬆肌肉，每次撫摸獲得的金幣 +5' },
-            { id: 'auto_arm',    name: '自動搔癢機械臂',   baseCost: 80,   costMult: 1.50, type: 'auto',  bonus: 3,  desc: '自動輕撫小豬，每秒自動產出 +3 金幣' },
-            { id: 'auto_ticket', name: '牧場觀光門票亭',   baseCost: 260,  costMult: 1.58, type: 'auto',  bonus: 9,  desc: '吸引遊客觀賞小豬，每秒自動產出 +9 金幣' },
-            { id: 'auto_chef',   name: '米其林食神俱樂部', baseCost: 750,  costMult: 1.65, type: 'auto',  bonus: 24, desc: '美食評鑑贊助，每秒自動產出 +24 金幣' },
-            { id: 'auto_truffle',name: '皇家松露尋寶獵犬', baseCost: 2200, costMult: 1.72, type: 'auto',  bonus: 68, desc: '全天候挖掘珍寶，每秒自動產出 +68 金幣' }
-        ];
-
-        const BIOMES_CATALOG = [
-            {
-                id: 'sunny', name: '暖陽田園牧場', price: 0,
-                desc: '和煦午後陽光與翠綠草坡的經典鄉村牧場',
-                sky: 0xa6d8f7, groundOuter: 0x699855, turfLight: 0x82b366, turfDeep: 0x63914c, dirt: 0x9c8260,
-                hill1: 0x5b8a47, hill2: 0x4e7a3d, leaf1: 0x3f6e36, leaf2: 0x4f8242, sunColor: 0xfff1d6, sunInt: 0.95
+        // Global compatibility pig getter/setter
+        Object.defineProperty(window, 'pig', {
+            get() {
+                return (typeof PigManager !== 'undefined') ? PigManager.getActivePigInstance() : null;
             },
-            {
-                id: 'sakura', name: '櫻吹雪春日庭園', price: 600,
-                desc: '漫山粉紅櫻花林與溫柔春風的浪漫莊園',
-                sky: 0xfce7f3, groundOuter: 0x76a068, turfLight: 0x9bc484, turfDeep: 0x7ba368, dirt: 0xb89984,
-                hill1: 0x6e9960, hill2: 0x5d8750, leaf1: 0xf472b6, leaf2: 0xfbcfe8, sunColor: 0xfff0f5, sunInt: 0.92
-            },
-            {
-                id: 'autumn', name: '暮光楓紅莊園', price: 1200,
-                desc: '金黃銀杏與火紅楓葉交織的秋日豐收牧場',
-                sky: 0xfed7aa, groundOuter: 0x9a7b3e, turfLight: 0xc29b48, turfDeep: 0x9c7832, dirt: 0x8c6239,
-                hill1: 0x8f5e2c, hill2: 0x754a21, leaf1: 0xd97706, leaf2: 0xdc2626, sunColor: 0xffedd5, sunInt: 0.96
-            },
-            {
-                id: 'night', name: '星夜螢火蟲森林', price: 2200,
-                desc: '靜謐靛藍星空下閃爍溫暖燈火的奇幻森林',
-                sky: 0x1e293b, groundOuter: 0x264636, turfLight: 0x345e48, turfDeep: 0x224031, dirt: 0x4a3f35,
-                hill1: 0x1e3a2f, hill2: 0x162b22, leaf1: 0x155e63, leaf2: 0x0f766e, sunColor: 0x93c5fd, sunInt: 0.65
-            },
-            {
-                id: 'snow', name: '靄靄瑞雪溫泉鄉', price: 3800,
-                desc: '銀白雪松與粉雪覆蓋的冬日溫泉渡假村',
-                sky: 0xdbeafe, groundOuter: 0xcbd5e1, turfLight: 0xf1f5f9, turfDeep: 0xdbeafe, dirt: 0x94a3b8,
-                hill1: 0xe2e8f0, hill2: 0xcbd5e1, leaf1: 0x94a3b8, leaf2: 0xe2e8f0, sunColor: 0xffffff, sunInt: 0.90
-            },
-            {
-                id: 'palace', name: '雲端黃金皇宮', price: 8800,
-                desc: '純白玉石草坪與黃金神木環繞的皇家聖域',
-                sky: 0xfef9c3, groundOuter: 0xd6d3d1, turfLight: 0xfef3c7, turfDeep: 0xfde68a, dirt: 0xf59e0b,
-                hill1: 0xe7e5e4, hill2: 0xd6d3d1, leaf1: 0xf59e0b, leaf2: 0xfacc15, sunColor: 0xfffbeb, sunInt: 0.98
+            set(v) {
+                if (typeof PigManager !== 'undefined' && PigManager.instances.length === 0 && v) {
+                    PigManager.instances = [v];
+                }
             }
-        ];
-
-        const WEAPONS_CATALOG = [
-            { id: 'wood_sword',    name: '鍛造木劍',           price: 180,  atkBonus: 18,  critBonus: 0,  desc: '結實堅固的橡木短劍，小豬勇士的啟蒙之刃' },
-            { id: 'boxing_gloves', name: '熱血冠軍拳套',       price: 420,  atkBonus: 38,  critBonus: 8,  desc: '火紅皮革拳擊手套，出拳自帶破空聲與暴擊加成' },
-            { id: 'knight_lance',  name: '皇家騎士長槍',       price: 950,  atkBonus: 85,  critBonus: 12, desc: '純銀精鑄騎士長矛，配備黃金護手碗' },
-            { id: 'excalibur',     name: '誓約勝利王者之劍',   price: 2200, atkBonus: 190, critBonus: 25, desc: '金光閃耀的神聖王劍，劍刃散發神聖蔚藍輝光' }
-        ];
-
-        const SHIELDS_CATALOG = [
-            { id: 'linen_cape',    name: '冒險者亞麻斗篷',     price: 150,  defBonus: 12,  hpBonus: 60,  desc: '輕盈防風的旅行斗篷，減免森林魔物抓傷' },
-            { id: 'oak_buckler',   name: '橡木精鋼小圓盾',     price: 380,  defBonus: 30,  hpBonus: 150, desc: '沉重橡木鑲嵌鋼釘圓盾，可穩健格擋衝擊' },
-            { id: 'mithril_armor', name: '秘銀重裝騎士護甲',   price: 880,  defBonus: 70,  hpBonus: 350, desc: '精靈秘銀精工鍛造，極大幅度強化小豬體魄硬度' },
-            { id: 'holy_aegis',    name: '聖光庇護神之巨盾',   price: 1980, defBonus: 150, hpBonus: 800, desc: '銘刻守護盧恩符文的聖白巨盾，具有堅不可摧神力' }
-        ];
-
-        const ESTATE_CATALOG = [
-            { id: 'auto_feeder',      name: '自動補料投餵機',   price: 1200, passiveCoin: 0,  desc: '當小豬飽足低於25%時自動餵食零食，飽足上限提升至120%' },
-            { id: 'hydro_spa',        name: '皇家泥漿水療溫泉', price: 1800, passiveCoin: 4,  desc: '清潔與心情衰減速度減少50%，每秒自動產出 +4 金幣' },
-            { id: 'fortune_windmill', name: '幸運黃金風車',     price: 3500, passiveCoin: 8,  desc: '撫摸與戰鬥收益獲得 1.5x 加乘，每秒自動產出 +8 金幣' },
-            { id: 'combat_dummy',     name: '戰鬥修煉假人',     price: 4800, passiveCoin: 0,  desc: '小豬專屬特訓假人，永久使戰鬥攻擊 +40、防禦 +25' },
-            { id: 'golden_statue',    name: '至尊純金小豬雕像', price: 10000, passiveCoin: 20, desc: '象徵至高財富的紀念碑，每秒產出 +20 金幣並解鎖小豬環繞金光' }
-        ];
-
-        const BATTLE_STAGES = [
-            { id: 1, name: '蘿蔔森林',     boss: '蹦跳野兔長老',     hp: 160,  atk: 14, def: 4,  reward: 70,   icon: '🥕', desc: '守護巨大胡蘿蔔的野兔族長，敏捷迅速' },
-            { id: 2, name: '泥沼礦坑',     boss: '暴躁地鼠礦工',     hp: 350,  atk: 28, def: 10, reward: 160,  icon: '⛏️', desc: '霸佔地底金礦的暴躁地鼠，揮動十字鎬威力兇猛' },
-            { id: 3, name: '荊棘平原',     boss: '刺蝟狂戰士',       hp: 720,  atk: 48, def: 22, reward: 350,  icon: '🦔', desc: '鋼針般尖刺的狂暴刺蝟，防守極為棘手' },
-            { id: 4, name: '熔岩南瓜谷',   boss: '熔岩南瓜巨靈',     hp: 1350, atk: 82, def: 38, reward: 750,  icon: '🎃', desc: '吸收地底熔岩而甦醒的魔像巨靈，每次震撼大地' },
-            { id: 5, name: '黑暗松露神殿', boss: '暗黑魔龍神豬',     hp: 2600, atk: 135, def: 55, reward: 1800, icon: '🐉', desc: '盤踞於松露世界之巔的終極霸主，討伐贏取海量金幣！' }
-        ];
-
-        const TIER_INFO = {
-            1:  { name: '鮮採單品',       multiplier: 1.0,  cooking: ['鮮切', '原味', '朝露', '牧場風', '陽光', '脆口', '田園', '初摘', '純粹', '甘露'] },
-            2:  { name: '雙拼小菜',       multiplier: 1.15, cooking: ['雙重奏', '佐味盤', '輕拌皿', '雙鮮盅', '風味疊', '相伴盤', '小炒', '和風皿'] },
-            3:  { name: '三鮮風味拼盤',   multiplier: 1.28, cooking: ['三鮮匯', '三重奏', '什錦盤', '溫沙拉', '烘烤盤', '田園匯', '香草盅', '彩蔬盤'] },
-            4:  { name: '四時田園燉菜',   multiplier: 1.42, cooking: ['濃湯燉鍋', '奶油焗盅', '陶鍋慢燉', '四季煲', '鄉村燉菜', '黃金濃湯', '鮮蔬湯鍋'] },
-            5:  { name: '五味平衡盛宴',   multiplier: 1.58, cooking: ['五味御膳', '五行薈萃', '豐收盛皿', '主廚特餐', '森林饗宴', '極味拼盤', '百果燉盅'] },
-            6:  { name: '六合精選御膳',   multiplier: 1.75, cooking: ['六合珍饈', '莊園御品', '宮廷慢煨', '六味金盅', '皇家盛饌', '醇香大盤'] },
-            7:  { name: '七星珍饈煲',     multiplier: 1.95, cooking: ['七星連珠煲', '北斗珍味鍋', '虹彩琉璃膳', '七彩慶典煲', '晶鑽御膳鍋'] },
-            8:  { name: '八珍極品大餐',   multiplier: 2.20, cooking: ['八珍玉食席', '八方豐登宴', '金玉滿堂鍋', '御廚八寶膳'] },
-            9:  { name: '九轉至尊滿漢席', multiplier: 2.55, cooking: ['九轉金丹宴', '九重天極品席', '至尊九珍皇膳'] },
-            10: { name: '傳奇十全大補神饌', multiplier: 3.20, cooking: ['傳奇十全大補神饌'] }
-        };
-
-        const BUFF_TYPES = [
-            { id: 'normal',  label: '營養均衡（體態健康）', color: '#94a3b8' },
-            { id: 'bouncy',  label: 'Q彈果凍肌（彈性提升）', color: '#f472b6' },
-            { id: 'speedy',  label: '活力疾風步（步伐輕快）', color: '#34d399' },
-            { id: 'growth',  label: '暴風成長（增重加速）', color: '#fb923c' },
-            { id: 'golden',  label: '皇家金光（心情常駐滿載）', color: '#fbbf24' }
-        ];
-
-        const RECIPES_DB = new Array(1024);
-        function buildAll1023Recipes() {
-            for (let mask = 1; mask <= 1023; mask++) {
-                const activeIngs = [];
-                let rawHunger = 0, rawMood = 0, rawEnergy = 0, rawWeight = 0;
-
-                for (let i = 0; i < 10; i++) {
-                    if (mask & (1 << i)) {
-                        const ing = INGREDIENTS[i];
-                        activeIngs.push(ing);
-                        rawHunger += ing.hunger;
-                        rawMood += ing.mood;
-                        rawEnergy += ing.energy;
-                        rawWeight += ing.weight;
-                    }
-                }
-
-                const count = activeIngs.length;
-                const tier = TIER_INFO[count];
-                const mult = tier.multiplier;
-                const styleList = tier.cooking;
-                const styleWord = styleList[mask % styleList.length];
-
-                let dishName = '';
-                if (count === 1) {
-                    dishName = `${styleWord}${activeIngs[0].name}`;
-                } else if (count === 2) {
-                    dishName = `${activeIngs[0].short}佐${activeIngs[1].short}${styleWord}`;
-                } else if (count === 3) {
-                    dishName = `${activeIngs[0].short}${activeIngs[1].short}燴${activeIngs[2].short}${styleWord}`;
-                } else if (count === 4) {
-                    dishName = `${activeIngs[0].short}${activeIngs[1].short}${activeIngs[2].short}伴${activeIngs[3].short}${styleWord}`;
-                } else if (count === 10) {
-                    dishName = `傳奇十全大補皇家神饌`;
-                } else if (count === 9) {
-                    const missing = INGREDIENTS.find(ing => !(mask & ing.bit));
-                    dishName = `${styleWord}（九珍無${missing.short}特仕）`;
-                } else {
-                    const leadA = activeIngs[0].short;
-                    const leadB = activeIngs[Math.floor(count / 2)].short;
-                    const leadC = activeIngs[count - 1].short;
-                    dishName = `${leadA}${leadB}佐${leadC}${styleWord}`;
-                }
-
-                let buff = BUFF_TYPES[0];
-                if (mask === 1023 || (mask & 512)) {
-                    buff = BUFF_TYPES[4];
-                } else if (count >= 6) {
-                    buff = BUFF_TYPES[3];
-                } else if (mask & 64 || mask & 16) {
-                    buff = BUFF_TYPES[1];
-                } else if (mask & 256 || mask & 2) {
-                    buff = BUFF_TYPES[2];
-                }
-
-                RECIPES_DB[mask] = {
-                    id: mask,
-                    ingNames: activeIngs.map(x => x.short).join('、'),
-                    count,
-                    tierName: tier.name,
-                    name: dishName,
-                    hunger: Math.min(100, Math.round(rawHunger * mult * 0.48)),
-                    mood: Math.min(100, Math.round(rawMood * mult * 0.52)),
-                    energy: Math.min(100, Math.round(rawEnergy * mult * 0.45)),
-                    weightGain: Number((rawWeight * mult * 0.45).toFixed(2)),
-                    coinReward: Math.round((rawHunger + rawMood) * mult * 0.85),
-                    buff
-                };
-            }
-        }
-        buildAll1023Recipes();
-
-        /********************************************************************
-         * 3. GAME STATE & PERSISTENCE
-         ********************************************************************/
-        const STORAGE_KEY = 'PIG_SIM_3D_SAVE_V2';
-        const gameState = {
-            pigName: '粉紅圓圓',
-            coins: 300,
-            weight: 15.0,
-            hunger: 80,
-            mood: 85,
-            energy: 90,
-            cleanliness: 92,
-            intimacy: 12,
-            intimacyLevel: 1,
-            stateLabel: '閒晃中',
-            currentHat: 'sprout',
-            currentBiome: 'sunny',
-            unlockedBiomes: { sunny: true },
-            ingStock: { A: 5, B: 5, C: 4, D: 3, E: 3, F: 2, G: 2, H: 2, I: 1, J: 1 },
-            ownedToys: { soccer: true, bowling: true },
-            activeToys: { soccer: true, bowling: true },
-            upgradeLevels: { touch_power: 0, touch_crit: 0, auto_arm: 0, auto_ticket: 0, auto_chef: 0, auto_truffle: 0 },
-            activeBuff: BUFF_TYPES[0],
-            buffTimer: 0,
-            troughMask: 0,
-            unlockedRecipes: {},
-            equippedWeapon: null,
-            equippedShield: null,
-            ownedEquip: {},
-            estateLevels: {},
-            battleStagesUnlocked: 1,
-            battleWins: 0
-        };
-
-        function getTouchCoinGain() {
-            let base = 3;
-            UPGRADES_CATALOG.forEach(up => {
-                if (up.type === 'touch') {
-                    base += (gameState.upgradeLevels[up.id] || 0) * up.bonus;
-                }
-            });
-            if (gameState.estateLevels && gameState.estateLevels.fortune_windmill) {
-                base = Math.round(base * 1.5);
-            }
-            return base;
-        }
-
-        function getAutoCoinPerSec() {
-            let total = 0;
-            UPGRADES_CATALOG.forEach(up => {
-                if (up.type === 'auto') {
-                    total += (gameState.upgradeLevels[up.id] || 0) * up.bonus;
-                }
-            });
-            TOYS_CATALOG.forEach(toy => {
-                if (gameState.ownedToys[toy.id]) {
-                    total += toy.passiveCoin;
-                }
-            });
-            ESTATE_CATALOG.forEach(est => {
-                if (gameState.estateLevels && gameState.estateLevels[est.id]) {
-                    total += est.passiveCoin || 0;
-                }
-            });
-            return total;
-        }
-
-        function getUpgradeCost(up) {
-            const lv = gameState.upgradeLevels[up.id] || 0;
-            return Math.round(up.baseCost * Math.pow(up.costMult, lv));
-        }
-
-        function loadGameState() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const data = JSON.parse(raw);
-                    if (data.pigName) gameState.pigName = String(data.pigName).slice(0, 12);
-                    if (typeof data.coins === 'number') gameState.coins = Math.max(0, Math.floor(data.coins));
-                    if (typeof data.weight === 'number') gameState.weight = Math.max(5, Math.min(500, data.weight));
-                    if (typeof data.hunger === 'number') gameState.hunger = Math.max(0, Math.min(100, data.hunger));
-                    if (typeof data.mood === 'number') gameState.mood = Math.max(0, Math.min(100, data.mood));
-                    if (typeof data.energy === 'number') gameState.energy = Math.max(0, Math.min(100, data.energy));
-                    if (typeof data.cleanliness === 'number') gameState.cleanliness = Math.max(0, Math.min(100, data.cleanliness));
-                    if (typeof data.intimacy === 'number') gameState.intimacy = Math.max(0, data.intimacy);
-                    if (typeof data.intimacyLevel === 'number') gameState.intimacyLevel = Math.max(1, data.intimacyLevel);
-                    if (typeof data.currentHat === 'string') gameState.currentHat = data.currentHat;
-                    if (typeof data.currentBiome === 'string') gameState.currentBiome = data.currentBiome;
-                    if (data.unlockedBiomes) Object.assign(gameState.unlockedBiomes, data.unlockedBiomes);
-                    if (data.ingStock) Object.assign(gameState.ingStock, data.ingStock);
-                    if (data.ownedToys) Object.assign(gameState.ownedToys, data.ownedToys);
-                    if (data.activeToys) Object.assign(gameState.activeToys, data.activeToys);
-                    if (data.upgradeLevels) Object.assign(gameState.upgradeLevels, data.upgradeLevels);
-                    if (data.unlockedRecipes && typeof data.unlockedRecipes === 'object') {
-                        gameState.unlockedRecipes = data.unlockedRecipes;
-                    }
-                    if (typeof data.equippedWeapon === 'string' || data.equippedWeapon === null) gameState.equippedWeapon = data.equippedWeapon;
-                    if (typeof data.equippedShield === 'string' || data.equippedShield === null) gameState.equippedShield = data.equippedShield;
-                    if (data.ownedEquip && typeof data.ownedEquip === 'object') Object.assign(gameState.ownedEquip, data.ownedEquip);
-                    if (data.estateLevels && typeof data.estateLevels === 'object') Object.assign(gameState.estateLevels, data.estateLevels);
-                    if (typeof data.battleStagesUnlocked === 'number') gameState.battleStagesUnlocked = Math.max(1, Math.min(5, data.battleStagesUnlocked));
-                    if (typeof data.battleWins === 'number') gameState.battleWins = data.battleWins;
-                }
-            } catch (e) {
-                console.warn('無法載入存檔:', e);
-            }
-        }
-
-        function saveGameState() {
-            try {
-                const payload = {
-                    pigName: gameState.pigName,
-                    coins: Math.floor(gameState.coins),
-                    weight: gameState.weight,
-                    hunger: gameState.hunger,
-                    mood: gameState.mood,
-                    energy: gameState.energy,
-                    cleanliness: gameState.cleanliness,
-                    intimacy: gameState.intimacy,
-                    intimacyLevel: gameState.intimacyLevel,
-                    currentHat: gameState.currentHat,
-                    currentBiome: gameState.currentBiome,
-                    unlockedBiomes: gameState.unlockedBiomes,
-                    ingStock: gameState.ingStock,
-                    ownedToys: gameState.ownedToys,
-                    activeToys: gameState.activeToys,
-                    upgradeLevels: gameState.upgradeLevels,
-                    unlockedRecipes: gameState.unlockedRecipes,
-                    equippedWeapon: gameState.equippedWeapon,
-                    equippedShield: gameState.equippedShield,
-                    ownedEquip: gameState.ownedEquip,
-                    estateLevels: gameState.estateLevels,
-                    battleStagesUnlocked: gameState.battleStagesUnlocked,
-                    battleWins: gameState.battleWins
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-            } catch (e) {
-                console.warn('無法寫入存檔:', e);
-            }
-        }
-        loadGameState();
+        });
 
         /********************************************************************
          * 4. 3D SCENE, STUDIO HDRI ENVIRONMENT & CANNON.JS PHYSICS WORLD
@@ -2226,7 +2017,7 @@
         const toyItems = [];
         const bowlingPins = [];
         let bowlingResetTimer = 0;
-        let pig = null;
+        // pig is dynamically mapped via window.pig to PigManager.getActivePigInstance()
         let currentCraving = null;
 
         function createDetailedIngredientMesh(code) {
@@ -2858,1151 +2649,7 @@
             syncTroughRecipeUI();
         }
 
-        class PerVertexSoftBodyPig {
-            constructor() {
-                this.root = new THREE.Group();
-                this.visualGroup = new THREE.Group();
-                this.root.add(this.visualGroup);
-                scene.add(this.root);
-
-                this.radius = 1.25;
-                this.body = new CANNON.Body({
-                    mass: 5.0,
-                    material: pigPhysMat,
-                    shape: new CANNON.Sphere(this.radius),
-                    linearDamping: 0.55,
-                    angularDamping: 0.9
-                });
-                this.body.position.set(0, 1.5, 1.2);
-                this.body.fixedRotation = true;
-                this.body.updateMassProperties();
-                world.addBody(this.body);
-
-                this.prevVelocity = new THREE.Vector3();
-                this.facingAngle = 0;
-                this.targetZone = null;
-                this.aiState = 'WANDER';
-                this.wanderTarget = new THREE.Vector3(0, 0, 1.5);
-                this.wanderTimer = 2.0;
-                this.walkCycle = 0;
-                this.happyTimer = 0;
-                this.eatTimer = 0;
-                this.blinkTimer = 2.5;
-                this.isBlinking = false;
-                this.activePinch = null;
-
-                this.buildSculptedSoftBodyMesh();
-                this.buildExpressiveFeaturesAndLimbs();
-                this.build3DNameplate();
-                this.setHat(gameState.currentHat);
-                this.buildCombatEquipMounts();
-            }
-
-            buildSculptedSoftBodyMesh() {
-                const geo = new THREE.SphereGeometry(1.0, 92, 64);
-                const posAttr = geo.attributes.position;
-                const vCount = posAttr.count;
-
-                this.vCount = vCount;
-                this.restPos = new Float32Array(vCount * 3);
-                this.disp = new Float32Array(vCount * 3);
-                this.vel = new Float32Array(vCount * 3);
-                this.softness = new Float32Array(vCount);
-                this.baseColors = new Float32Array(vCount * 3);
-                this.liveColors = new Float32Array(vCount * 3);
-                this.blush = new Float32Array(vCount);
-                this.mud = new Float32Array(vCount);
-
-                const cSkinBase = new THREE.Color(0xffb5c2);
-                const cBackWarm = new THREE.Color(0xf9a8b8);
-                const cBellySoft = new THREE.Color(0xffd0da);
-                const cCheekRosy = new THREE.Color(0xf472b6);
-                const cSnoutTip = new THREE.Color(0xfb7185);
-                const cNostrilDeep = new THREE.Color(0x7f1d32);
-                const tmpCol = new THREE.Color();
-
-                const v = new THREE.Vector3();
-                for (let i = 0; i < vCount; i++) {
-                    v.fromBufferAttribute(posAttr, i);
-
-                    v.z *= 1.40;
-                    v.x *= 1.07;
-                    v.y *= 0.96;
-
-                    if (v.y > 0.35 && Math.abs(v.z) < 0.95) {
-                        const spineGroove = Math.exp(-Math.pow(v.x * 8.5, 2)) * 0.025;
-                        v.y -= spineGroove;
-                    }
-                    const shoulderBulge = Math.exp(-Math.pow((v.z - 0.45) / 0.38, 2)) * Math.exp(-Math.pow((Math.abs(v.x) - 0.72) / 0.35, 2));
-                    const haunchBulge = Math.exp(-Math.pow((v.z + 0.68) / 0.42, 2)) * Math.exp(-Math.pow((Math.abs(v.x) - 0.76) / 0.38, 2));
-                    v.x += Math.sign(v.x) * (shoulderBulge * 0.08 + haunchBulge * 0.12);
-
-                    if (v.y < 0) {
-                        const bellyFullness = Math.cos(Math.min(Math.PI * 0.5, Math.abs(v.z) * 0.82));
-                        v.y -= Math.max(0, bellyFullness) * 0.15;
-                        v.x *= 1.0 - v.y * 0.09;
-                        const navelDist = Math.hypot(v.x, v.z + 0.05);
-                        if (v.y < -0.82 && navelDist < 0.14) {
-                            v.y += Math.cos((navelDist / 0.14) * Math.PI * 0.5) * 0.035;
-                        }
-                    }
-
-                    let cheekFactor = 0;
-                    if (v.z > 0.28) {
-                        const headBlend = Math.min(1, (v.z - 0.28) / 0.96);
-                        v.y += headBlend * 0.09;
-
-                        const browRidge = Math.exp(-Math.pow((v.z - 1.02) / 0.18, 2)) * Math.exp(-Math.pow((v.y - 0.46) / 0.14, 2)) * Math.exp(-Math.pow(v.x / 0.55, 2));
-                        v.z += browRidge * 0.055;
-                        v.y += browRidge * 0.025;
-
-                        if (v.y < 0.18 && v.y > -0.58) {
-                            cheekFactor = Math.exp(-Math.pow((v.z - 0.84) / 0.38, 2)) * Math.exp(-Math.pow((Math.abs(v.x) - 0.58) / 0.36, 2));
-                            v.x += Math.sign(v.x) * cheekFactor * 0.24;
-                            v.y -= cheekFactor * 0.07;
-                        }
-
-                        const mouthDist = Math.hypot(v.x * 0.85, v.y + 0.32);
-                        if (v.z > 0.98 && mouthDist < 0.28) {
-                            const smileIndent = Math.cos((mouthDist / 0.28) * Math.PI * 0.5);
-                            v.z -= smileIndent * 0.06;
-                            v.y += smileIndent * 0.025;
-                        }
-                    }
-
-                    let snoutFactor = 0;
-                    let nostrilDepth = 0;
-                    const snoutRadial = Math.hypot(v.x * 1.12, (v.y + 0.03) * 1.32);
-                    if (v.z > 0.88 && snoutRadial < 0.54) {
-                        snoutFactor = Math.cos((snoutRadial / 0.54) * Math.PI * 0.5);
-                        v.z += Math.pow(snoutFactor, 0.68) * 0.36;
-
-                        if (snoutRadial < 0.36) {
-                            const rimBoost = Math.exp(-Math.pow((snoutRadial - 0.31) / 0.055, 2)) * 0.032;
-                            v.z = Math.min(v.z, 1.57) + rimBoost;
-                        }
-
-                        if (v.y < -0.06 && v.y > -0.26 && Math.abs(v.x) < 0.06 && v.z > 1.35) {
-                            v.z -= Math.cos((Math.abs(v.x) / 0.06) * Math.PI * 0.5) * 0.025;
-                        }
-
-                        const dLeftNostril = Math.hypot((v.x - 0.135) * 1.15, (v.y - 0.01) * 0.92);
-                        const dRightNostril = Math.hypot((v.x + 0.135) * 1.15, (v.y - 0.01) * 0.92);
-                        const minNostril = Math.min(dLeftNostril, dRightNostril);
-                        if (minNostril < 0.098 && v.z > 1.35) {
-                            nostrilDepth = Math.cos((minNostril / 0.098) * Math.PI * 0.5);
-                            v.z -= nostrilDepth * 0.18;
-                        }
-                    }
-
-                    if (v.z < -0.95) {
-                        const rumpCleft = Math.exp(-Math.pow(v.x * 6.5, 2)) * Math.min(1, (-v.z - 0.95) * 2.2);
-                        v.z += rumpCleft * 0.065;
-                    }
-
-                    posAttr.setXYZ(i, v.x, v.y, v.z);
-                    this.restPos[i * 3] = v.x;
-                    this.restPos[i * 3 + 1] = v.y;
-                    this.restPos[i * 3 + 2] = v.z;
-
-                    let soft = 0.78;
-                    if (v.y < -0.2) soft += 0.38;
-                    if (cheekFactor > 0.1) soft += cheekFactor * 0.52;
-                    if (v.z < -0.8) soft += 0.35;
-                    if (snoutFactor > 0.2) soft = 0.68;
-                    this.softness[i] = soft;
-
-                    tmpCol.copy(cSkinBase);
-                    if (v.y > 0.35) tmpCol.lerp(cBackWarm, Math.min(0.45, (v.y - 0.35) * 0.65));
-                    if (v.y < -0.15) tmpCol.lerp(cBellySoft, Math.min(1, (-v.y - 0.15) * 1.45));
-                    if (cheekFactor > 0.05) tmpCol.lerp(cCheekRosy, Math.min(0.78, cheekFactor * 1.15));
-                    if (snoutFactor > 0.15) tmpCol.lerp(cSnoutTip, Math.min(0.68, snoutFactor * 0.85));
-                    if (nostrilDepth > 0.1) tmpCol.lerp(cNostrilDeep, Math.min(0.95, nostrilDepth * 1.35));
-
-                    this.baseColors[i * 3] = tmpCol.r;
-                    this.baseColors[i * 3 + 1] = tmpCol.g;
-                    this.baseColors[i * 3 + 2] = tmpCol.b;
-
-                    this.liveColors[i * 3] = tmpCol.r;
-                    this.liveColors[i * 3 + 1] = tmpCol.g;
-                    this.liveColors[i * 3 + 2] = tmpCol.b;
-                }
-
-                geo.setAttribute('color', new THREE.BufferAttribute(this.liveColors, 3));
-                geo.computeVertexNormals();
-
-                this.buildVertexNeighborGraph(geo);
-
-                this.skinMat = new THREE.MeshPhysicalMaterial({
-                    vertexColors: true,
-                    roughness: 0.55,
-                    metalness: 0.02,
-                    clearcoat: 0.32,
-                    clearcoatRoughness: 0.16,
-                    reflectivity: 0.22,
-                    sheen: new THREE.Color(0xfb7185)
-                });
-
-                this.bodyMesh = new THREE.Mesh(geo, this.skinMat);
-                this.bodyMesh.position.y = 1.08;
-                this.bodyMesh.castShadow = true;
-                this.bodyMesh.receiveShadow = true;
-                this.bodyMesh.userData = { interactType: 'PIG_SOFTBODY' };
-                this.visualGroup.add(this.bodyMesh);
-            }
-
-            buildVertexNeighborGraph(geo) {
-                const n = this.vCount;
-                const adjSets = Array.from({ length: n }, () => new Set());
-
-                const indexAttr = geo.index;
-                if (indexAttr) {
-                    const arr = indexAttr.array;
-                    for (let i = 0; i < arr.length; i += 3) {
-                        const a = arr[i], b = arr[i + 1], c = arr[i + 2];
-                        adjSets[a].add(b); adjSets[a].add(c);
-                        adjSets[b].add(a); adjSets[b].add(c);
-                        adjSets[c].add(a); adjSets[c].add(b);
-                    }
-                }
-
-                const seamBuckets = new Map();
-                this.seamGroups = [];
-                const bucketGroupMap = new Map();
-
-                for (let i = 0; i < n; i++) {
-                    const kx = Math.round(this.restPos[i * 3] * 200);
-                    const ky = Math.round(this.restPos[i * 3 + 1] * 200);
-                    const kz = Math.round(this.restPos[i * 3 + 2] * 200);
-                    const key = `${kx}_${ky}_${kz}`;
-                    if (seamBuckets.has(key)) {
-                        const firstIdx = seamBuckets.get(key);
-                        adjSets[i].add(firstIdx);
-                        adjSets[firstIdx].add(i);
-                        if (!bucketGroupMap.has(key)) {
-                            const grp = [firstIdx, i];
-                            bucketGroupMap.set(key, grp);
-                            this.seamGroups.push(grp);
-                        } else {
-                            bucketGroupMap.get(key).push(i);
-                        }
-                    } else {
-                        seamBuckets.set(key, i);
-                    }
-                }
-
-                this.neighbors = adjSets.map(s => Int32Array.from(s));
-            }
-
-            buildExpressiveFeaturesAndLimbs() {
-                const skinPartMat = createOrganicSurfaceMaterial(0xffb3c1, 0.72);
-                const innerEarMat = createOrganicSurfaceMaterial(0xfb7185, 0.76);
-                const hoofMat = createMatteMaterial(0x4a2c1d, 0.80);
-                const scleraMat = createMatteMaterial(0xffffff, 0.30);
-                const irisMat = createMatteMaterial(0x3b2314, 0.28);
-                const pupilMat = createMatteMaterial(0x0f172a, 0.20);
-
-                this.leftEyeGroup = new THREE.Group();
-                this.rightEyeGroup = new THREE.Group();
-                [this.leftEyeGroup, this.rightEyeGroup].forEach((eg, idx) => {
-                    const side = idx === 0 ? 1 : -1;
-                    eg.position.set(side * 0.41, 1.39, 1.16);
-                    eg.rotation.y = side * 0.27;
-
-                    const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.138, 20, 16), scleraMat);
-                    sclera.scale.set(1, 1.08, 0.78);
-                    eg.add(sclera);
-
-                    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.096, 18, 14), irisMat);
-                    iris.scale.set(1, 1.05, 0.65);
-                    iris.position.set(0, 0, 0.068);
-                    eg.add(iris);
-
-                    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.068, 16, 12), pupilMat);
-                    pupil.scale.set(1, 1.05, 0.65);
-                    pupil.position.set(0, 0, 0.092);
-                    eg.add(pupil);
-
-                    const catchLightMain = new THREE.Mesh(
-                        new THREE.SphereGeometry(0.026, 10, 10),
-                        new THREE.MeshBasicMaterial({ color: 0xffffff })
-                    );
-                    catchLightMain.position.set(0.032, 0.038, 0.142);
-                    eg.add(catchLightMain);
-
-                    const catchLightSub = new THREE.Mesh(
-                        new THREE.SphereGeometry(0.013, 8, 8),
-                        new THREE.MeshBasicMaterial({ color: 0xffffff })
-                    );
-                    catchLightSub.position.set(-0.025, -0.028, 0.14);
-                    eg.add(catchLightSub);
-
-                    const eyelid = new THREE.Mesh(
-                        new THREE.SphereGeometry(0.15, 20, 14, 0, Math.PI * 2, 0, Math.PI * 0.56),
-                        skinPartMat
-                    );
-                    eyelid.rotation.x = -Math.PI * 0.56;
-                    eg.add(eyelid);
-                    if (idx === 0) this.leftEyelid = eyelid;
-                    else this.rightEyelid = eyelid;
-
-                    // Refined 3D Eyebrows
-                    const browMat = createMatteMaterial(0x9d174d, 0.45);
-                    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.024, 0.03), browMat);
-                    brow.position.set(0, 0.175, 0.05);
-                    brow.rotation.z = -side * 0.16;
-                    eg.add(brow);
-                    if (idx === 0) this.leftBrow = brow;
-                    else this.rightBrow = brow;
-
-                    this.visualGroup.add(eg);
-                });
-
-                this.leftEar = new THREE.Group();
-                this.rightEar = new THREE.Group();
-                [this.leftEar, this.rightEar].forEach((earGrp, idx) => {
-                    const side = idx === 0 ? 1 : -1;
-                    earGrp.position.set(side * 0.56, 1.78, 0.78);
-
-                    const outerEarGeo = deformBufferGeometry(new THREE.SphereGeometry(0.33, 24, 18), (v) => {
-                        v.x *= 0.86;
-                        v.y *= 1.42;
-                        v.z *= 0.26;
-                        if (v.y > 0) {
-                            v.x *= 1 - v.y * 0.48;
-                            v.z += Math.pow(v.y, 2) * 0.28;
-                        }
-                        const rimRadial = Math.hypot(v.x, v.y * 0.65);
-                        if (rimRadial > 0.18 && v.z > 0) {
-                            v.z += 0.025;
-                        }
-                    });
-                    const outerEar = new THREE.Mesh(outerEarGeo, skinPartMat);
-                    outerEar.position.set(side * 0.14, 0.13, 0.05);
-                    outerEar.rotation.z = -side * 0.52;
-                    outerEar.rotation.x = 0.40;
-                    outerEar.castShadow = true;
-                    earGrp.add(outerEar);
-
-                    const innerEar = new THREE.Mesh(new THREE.SphereGeometry(0.21, 16, 12), innerEarMat);
-                    innerEar.scale.set(0.72, 1.18, 0.18);
-                    innerEar.position.set(side * 0.14, 0.11, 0.09);
-                    innerEar.rotation.z = -side * 0.52;
-                    innerEar.rotation.x = 0.40;
-                    earGrp.add(innerEar);
-
-                    this.visualGroup.add(earGrp);
-                });
-
-                this.legs = [];
-                const legPositions = [
-                    [0.52, 0.48, 0.68],
-                    [-0.52, 0.48, 0.68],
-                    [0.54, 0.48, -0.68],
-                    [-0.54, 0.48, -0.68]
-                ];
-                legPositions.forEach(([lx, ly, lz]) => {
-                    const legGrp = new THREE.Group();
-                    legGrp.position.set(lx, ly, lz);
-
-                    const upperGeo = deformBufferGeometry(new THREE.CylinderGeometry(0.24, 0.175, 0.50, 18, 8), (v) => {
-                        if (v.y > 0) v.x *= 1 + v.y * 0.25;
-                    });
-                    const upper = new THREE.Mesh(upperGeo, skinPartMat);
-                    upper.position.y = -0.15;
-                    upper.castShadow = true;
-                    legGrp.add(upper);
-
-                    const ankle = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10), skinPartMat);
-                    ankle.position.y = -0.36;
-                    legGrp.add(ankle);
-
-                    [-0.058, 0.058].forEach(toeX => {
-                        const toeGeo = deformBufferGeometry(new THREE.CylinderGeometry(0.075, 0.095, 0.17, 12), (v) => {
-                            if (v.z > 0) v.z *= 1.28;
-                        });
-                        const toe = new THREE.Mesh(toeGeo, hoofMat);
-                        toe.position.set(toeX, -0.43, 0.025);
-                        toe.castShadow = true;
-                        legGrp.add(toe);
-
-                        // Detailed soft pink paw pad under each trotter toe
-                        const padMat = createOrganicSurfaceMaterial(0xf472b6, 0.65);
-                        const toePad = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 10), padMat);
-                        toePad.position.set(toeX, -0.515, 0.025);
-                        legGrp.add(toePad);
-                    });
-
-                    this.visualGroup.add(legGrp);
-                    this.legs.push(legGrp);
-                });
-
-                this.tailGroup = new THREE.Group();
-                this.tailGroup.position.set(0, 1.18, -1.36);
-                const curvePts = [];
-                for (let t = 0; t <= 28; t++) {
-                    const u = t / 28;
-                    const ang = u * Math.PI * 3.4;
-                    const r = 0.145 * (1 - u * 0.35);
-                    curvePts.push(new THREE.Vector3(Math.cos(ang) * r, Math.sin(ang) * r + u * 0.17, -u * 0.38));
-                }
-                const tailCurve = new THREE.CatmullRomCurve3(curvePts);
-                const tailMesh = new THREE.Mesh(new THREE.TubeGeometry(tailCurve, 32, 0.054, 10, false), skinPartMat);
-                tailMesh.castShadow = true;
-                this.tailGroup.add(tailMesh);
-                this.visualGroup.add(this.tailGroup);
-
-                // Tactile glossy wet snout tip highlight
-                const wetSnoutMat = new THREE.MeshPhysicalMaterial({
-                    color: 0xfb7185,
-                    roughness: 0.18,
-                    metalness: 0.0,
-                    clearcoat: 0.85,
-                    clearcoatRoughness: 0.1,
-                    reflectivity: 0.5
-                });
-                this.snoutTipMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.06, 24), wetSnoutMat);
-                this.snoutTipMesh.rotation.x = Math.PI / 2 + 0.05;
-                this.snoutTipMesh.position.set(0, 1.06, 1.48);
-                this.snoutTipMesh.scale.set(1.15, 0.85, 1);
-                this.visualGroup.add(this.snoutTipMesh);
-
-                this.hatMount = new THREE.Group();
-                this.hatMount.position.set(0, 1.98, 0.72);
-                this.visualGroup.add(this.hatMount);
-
-                this.visualGroup.traverse(ch => {
-                    if (ch.isMesh && !ch.userData.interactType) {
-                        ch.userData = { interactType: 'PIG_SOFTBODY' };
-                    }
-                });
-            }
-
-            build3DNameplate() {
-                this.nameCanvas = document.createElement('canvas');
-                this.nameCanvas.width = 384;
-                this.nameCanvas.height = 88;
-                this.nameCtx = this.nameCanvas.getContext('2d');
-                this.nameTex = new THREE.CanvasTexture(this.nameCanvas);
-                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.nameTex, transparent: true, depthTest: false }));
-                sprite.scale.set(3.1, 0.72, 1);
-                sprite.position.set(0, 2.85, 0.25);
-                this.visualGroup.add(sprite);
-                this.updateNameplate();
-            }
-
-            updateNameplate() {
-                if (!this.nameCtx) return;
-                const ctx = this.nameCtx;
-                ctx.clearRect(0, 0, 384, 88);
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.84)';
-                ctx.strokeStyle = '#f472b6';
-                ctx.lineWidth = 4;
-                const r = 22;
-                ctx.beginPath();
-                ctx.moveTo(10 + r, 10);
-                ctx.lineTo(374 - r, 10);
-                ctx.quadraticCurveTo(374, 10, 374, 10 + r);
-                ctx.lineTo(374, 78 - r);
-                ctx.quadraticCurveTo(374, 78, 374 - r, 78);
-                ctx.lineTo(10, 78);
-                ctx.quadraticCurveTo(10, 78, 10, 78 - r);
-                ctx.lineTo(10, 10 + r);
-                ctx.quadraticCurveTo(10, 10, 10 + r, 10);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 26px "Noto Sans TC", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${gameState.pigName}  Lv.${gameState.intimacyLevel}`, 192, 44);
-                this.nameTex.needsUpdate = true;
-            }
-
-            setHat(hatType) {
-                while (this.hatMount.children.length > 0) {
-                    this.hatMount.remove(this.hatMount.children[0]);
-                }
-                gameState.currentHat = hatType;
-                if (hatType === 'sprout') {
-                    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.28, 8), createOrganicSurfaceMaterial(0x16a34a, 0.7));
-                    stem.position.y = 0.12;
-                    this.hatMount.add(stem);
-                    [-1, 1].forEach(s => {
-                        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), createOrganicSurfaceMaterial(0x22c55e, 0.65));
-                        leaf.scale.set(1.4, 0.28, 0.75);
-                        leaf.position.set(s * 0.11, 0.25, 0);
-                        leaf.rotation.z = -s * 0.35;
-                        this.hatMount.add(leaf);
-                    });
-                } else if (hatType === 'chef') {
-                    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.3, 0.22, 20), createMatteMaterial(0xf8fafc, 0.8));
-                    band.position.y = 0.1;
-                    this.hatMount.add(band);
-                    const puff = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 14), createMatteMaterial(0xffffff, 0.85));
-                    puff.scale.y = 0.75;
-                    puff.position.y = 0.32;
-                    this.hatMount.add(puff);
-                } else if (hatType === 'straw') {
-                    const strawMat = createMatteMaterial(0xfacc15, 0.88);
-                    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.68, 0.05, 24), strawMat);
-                    brim.position.y = 0.04;
-                    this.hatMount.add(brim);
-                    const dome = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.24, 20), strawMat);
-                    dome.position.y = 0.16;
-                    this.hatMount.add(dome);
-                    const ribbon = new THREE.Mesh(new THREE.CylinderGeometry(0.365, 0.365, 0.06, 20), createMatteMaterial(0xef4444, 0.8));
-                    ribbon.position.y = 0.08;
-                    this.hatMount.add(ribbon);
-                } else if (hatType === 'crown') {
-                    const crownMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.35, metalness: 0.45 });
-                    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.22, 16), crownMat);
-                    base.position.y = 0.11;
-                    this.hatMount.add(base);
-                    for (let k = 0; k < 6; k++) {
-                        const ang = (k / 6) * Math.PI * 2;
-                        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.18, 6), crownMat);
-                        spike.position.set(Math.cos(ang) * 0.26, 0.28, Math.sin(ang) * 0.26);
-                        this.hatMount.add(spike);
-                    }
-                } else if (hatType === 'scarf') {
-                    const scarfMat = createOrganicSurfaceMaterial(0xdc2626, 0.78);
-                    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.76, 0.14, 12, 28), scarfMat);
-                    ring.rotation.x = Math.PI / 2 + 0.18;
-                    ring.position.set(0, -0.92, 0.08);
-                    this.hatMount.add(ring);
-                } else if (hatType === 'angel') {
-                    // Golden Halo
-                    const haloMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfacc15, emissiveIntensity: 0.65, roughness: 0.2, metalness: 0.6 });
-                    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.032, 12, 28), haloMat);
-                    halo.rotation.x = Math.PI / 2;
-                    halo.position.set(0, 0.42, 0);
-                    this.hatMount.add(halo);
-                    // Pair of Cute White Wings
-                    const wingMat = createMatteMaterial(0xffffff, 0.35);
-                    [-1, 1].forEach(s => {
-                        const wingGeo = deformBufferGeometry(new THREE.BoxGeometry(0.38, 0.16, 0.04), (v) => {
-                            if (v.x > 0) v.y *= 1 + v.x * 1.5;
-                        });
-                        const wing = new THREE.Mesh(wingGeo, wingMat);
-                        wing.position.set(s * 0.44, -0.45, -0.65);
-                        wing.rotation.y = -s * 0.45;
-                        wing.rotation.z = s * 0.22;
-                        this.hatMount.add(wing);
-                    });
-                } else if (hatType === 'glasses') {
-                    // Cool Sunglasses
-                    const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.1, clearcoat: 0.9, transmission: 0.2 });
-                    const frameMat = createMatteMaterial(0x1e293b, 0.8);
-                    const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, 0.03), frameMat);
-                    bridge.position.set(0, -0.46, 0.64);
-                    this.hatMount.add(bridge);
-                    [-1, 1].forEach(s => {
-                        const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.03, 16), glassMat);
-                        lens.rotation.x = Math.PI / 2;
-                        lens.scale.set(1.15, 1, 0.85);
-                        lens.position.set(s * 0.22, -0.46, 0.63);
-                        this.hatMount.add(lens);
-                    });
-                } else if (hatType === 'bell') {
-                    // Red Bowtie & Golden Jingle Bell
-                    const bowMat = createOrganicSurfaceMaterial(0xdc2626, 0.8);
-                    const knot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 10), bowMat);
-                    knot.position.set(0, -0.92, 0.58);
-                    this.hatMount.add(knot);
-                    [-1, 1].forEach(s => {
-                        const wing = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.26, 8), bowMat);
-                        wing.rotation.z = s * (Math.PI / 2);
-                        wing.position.set(s * 0.16, -0.92, 0.56);
-                        this.hatMount.add(wing);
-                    });
-                    const bellMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.75 });
-                    const bell = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 12), bellMat);
-                    bell.position.set(0, -1.04, 0.60);
-                    this.hatMount.add(bell);
-                } else if (hatType === 'wizard') {
-                    // Star Wizard Hat
-                    const hatMat = createOrganicSurfaceMaterial(0x312e81, 0.82);
-                    const starMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xeab308, emissiveIntensity: 0.4, roughness: 0.3 });
-                    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.72, 0.04, 24), hatMat);
-                    brim.position.y = 0.04;
-                    this.hatMount.add(brim);
-                    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.78, 18), hatMat);
-                    cone.position.set(0, 0.42, -0.06);
-                    cone.rotation.x = -0.18;
-                    this.hatMount.add(cone);
-                    const star = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.04, 5), starMat);
-                    star.rotation.x = Math.PI / 2;
-                    star.position.set(0, 0.24, 0.28);
-                    this.hatMount.add(star);
-                }
-            }
-
-            buildCombatEquipMounts() {
-                this.weaponMount = new THREE.Group();
-                this.weaponMount.position.set(0.88, 0.95, 0.45);
-                this.visualGroup.add(this.weaponMount);
-
-                this.shieldMount = new THREE.Group();
-                this.shieldMount.position.set(-0.88, 0.95, 0.45);
-                this.visualGroup.add(this.shieldMount);
-
-                this.weaponSwingTimer = 0;
-                this.defendBarrierTimer = 0;
-
-                this.setWeapon(gameState.equippedWeapon);
-                this.setShield(gameState.equippedShield);
-            }
-
-            setWeapon(weaponId) {
-                while (this.weaponMount.children.length > 0) {
-                    this.weaponMount.remove(this.weaponMount.children[0]);
-                }
-                gameState.equippedWeapon = weaponId;
-                if (!weaponId) return;
-
-                if (weaponId === 'wood_sword') {
-                    // Wooden Training Sword
-                    const woodMat = createOrganicSurfaceMaterial(0x92400e, 0.85);
-                    const handleMat = createMatteMaterial(0x78350f, 0.9);
-                    const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.035, 0.22, 10), handleMat);
-                    hilt.position.y = -0.11;
-                    this.weaponMount.add(hilt);
-                    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.045, 0.06), woodMat);
-                    guard.position.y = 0.01;
-                    this.weaponMount.add(guard);
-                    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.65, 0.025), woodMat);
-                    blade.position.y = 0.34;
-                    this.weaponMount.add(blade);
-                    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.12, 4), woodMat);
-                    tip.position.y = 0.72;
-                    tip.rotation.y = Math.PI / 4;
-                    this.weaponMount.add(tip);
-                } else if (weaponId === 'boxing_gloves') {
-                    // Vibrant Red Boxing Glove
-                    const redGloveMat = new THREE.MeshPhysicalMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.05, clearcoat: 0.6 });
-                    const strapMat = createMatteMaterial(0xffffff, 0.7);
-                    const gloveBody = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 14), redGloveMat);
-                    gloveBody.scale.set(1.1, 1.25, 1.35);
-                    gloveBody.position.set(0, 0.15, 0.1);
-                    this.weaponMount.add(gloveBody);
-                    const thumb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), redGloveMat);
-                    thumb.position.set(-0.16, 0.12, 0.18);
-                    this.weaponMount.add(thumb);
-                    const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.12, 16), strapMat);
-                    wrist.position.set(0, -0.06, 0.05);
-                    this.weaponMount.add(wrist);
-                } else if (weaponId === 'knight_lance') {
-                    // Royal Knight Jousting Lance
-                    const steelMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.85 });
-                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.7 });
-                    const lanceBody = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.11, 1.35, 16), steelMat);
-                    lanceBody.position.y = 0.55;
-                    this.weaponMount.add(lanceBody);
-                    const guardBowl = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.18, 16, 1, true), goldMat);
-                    guardBowl.rotation.x = Math.PI;
-                    guardBowl.position.y = -0.08;
-                    this.weaponMount.add(guardBowl);
-                    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3, 12), goldMat);
-                    grip.position.y = -0.22;
-                    this.weaponMount.add(grip);
-                } else if (weaponId === 'excalibur') {
-                    // Holy Excalibur Sword with glowing blade & golden winged guard
-                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.8 });
-                    const holyBladeMat = new THREE.MeshPhysicalMaterial({
-                        color: 0x38bdf8,
-                        emissive: 0x0284c7,
-                        emissiveIntensity: 0.75,
-                        roughness: 0.15,
-                        metalness: 0.3,
-                        clearcoat: 1.0
-                    });
-                    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.06, 0.08), goldMat);
-                    guard.position.y = 0.02;
-                    this.weaponMount.add(guard);
-                    const pommel = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), goldMat);
-                    pommel.position.y = -0.26;
-                    this.weaponMount.add(pommel);
-                    const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.24, 12), createMatteMaterial(0x0f172a, 0.9));
-                    hilt.position.y = -0.12;
-                    this.weaponMount.add(hilt);
-                    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.82, 0.03), holyBladeMat);
-                    blade.position.y = 0.44;
-                    this.weaponMount.add(blade);
-                    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.18, 4), holyBladeMat);
-                    tip.position.y = 0.92;
-                    tip.rotation.y = Math.PI / 4;
-                    this.weaponMount.add(tip);
-                }
-                this.weaponMount.rotation.set(0.15, 0, -0.15);
-            }
-
-            setShield(shieldId) {
-                while (this.shieldMount.children.length > 0) {
-                    this.shieldMount.remove(this.shieldMount.children[0]);
-                }
-                gameState.equippedShield = shieldId;
-                if (!shieldId) return;
-
-                if (shieldId === 'linen_cape') {
-                    // Flowing Cape on shoulder
-                    const capeMat = createOrganicSurfaceMaterial(0x3b82f6, 0.8);
-                    const cape = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.45, 0.65, 12, 1, true, 0, Math.PI), capeMat);
-                    cape.rotation.y = -Math.PI / 2;
-                    cape.rotation.z = -0.2;
-                    cape.position.set(-0.05, -0.15, -0.1);
-                    this.shieldMount.add(cape);
-                } else if (shieldId === 'oak_buckler') {
-                    // Circular Wood & Iron Buckler
-                    const woodMat = createOrganicSurfaceMaterial(0x78350f, 0.85);
-                    const ironMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.35, metalness: 0.7 });
-                    const shieldBody = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.045, 24), woodMat);
-                    shieldBody.rotation.x = Math.PI / 2;
-                    shieldBody.rotation.y = 0.3;
-                    this.shieldMount.add(shieldBody);
-                    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), ironMat);
-                    boss.position.set(0, 0, 0.035);
-                    shieldBody.add(boss);
-                    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.025, 10, 24), ironMat);
-                    rim.position.z = 0.02;
-                    shieldBody.add(rim);
-                } else if (shieldId === 'mithril_armor') {
-                    // Mithril Armor Plate & Pauldron
-                    const mithrilMat = new THREE.MeshStandardMaterial({ color: 0x93c5fd, roughness: 0.2, metalness: 0.85 });
-                    const pauldron = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 14, 0, Math.PI * 2, 0, Math.PI / 2), mithrilMat);
-                    pauldron.scale.set(1.1, 0.9, 1.25);
-                    pauldron.position.set(-0.05, 0.1, 0);
-                    this.shieldMount.add(pauldron);
-                    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.48, 0.06), mithrilMat);
-                    plate.rotation.y = -0.4;
-                    plate.position.set(0, -0.18, 0.08);
-                    this.shieldMount.add(plate);
-                } else if (shieldId === 'holy_aegis') {
-                    // Holy Golden Aegis
-                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.85 });
-                    const holyMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.1, clearcoat: 0.9 });
-                    const kiteGeo = deformBufferGeometry(new THREE.BoxGeometry(0.46, 0.75, 0.05), (v) => {
-                        if (v.y < 0) v.x *= Math.max(0.2, 1.0 + v.y * 1.5);
-                    });
-                    const aegis = new THREE.Mesh(kiteGeo, holyMat);
-                    aegis.rotation.y = 0.4;
-                    this.shieldMount.add(aegis);
-                    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.62, 0.06), goldMat);
-                    crossV.position.z = 0.015;
-                    aegis.add(crossV);
-                    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.08, 0.06), goldMat);
-                    crossH.position.set(0, 0.12, 0.015);
-                    aegis.add(crossH);
-                }
-                this.shieldMount.rotation.set(0.12, 0, 0.15);
-            }
-
-            playAttackAnimation() {
-                this.body.velocity.z = 3.6;
-                this.body.velocity.y = 2.4;
-                this.weaponSwingTimer = 0.38;
-                sfx.playSlash();
-                if (typeof spawn3DParticle !== 'undefined') {
-                    spawn3DParticle('SPARKLE', this.root.position.clone().add(new THREE.Vector3(0.5, 1.2, 1.2)));
-                }
-            }
-
-            playDefendAnimation() {
-                this.defendBarrierTimer = 0.45;
-                sfx.playShieldBlock();
-                if (typeof spawn3DParticle !== 'undefined') {
-                    spawn3DParticle('STAR', this.root.position.clone().add(new THREE.Vector3(-0.4, 1.2, 0.9)));
-                }
-            }
-
-            pokeAtWorldPoint(worldPoint, worldNormal, strength = 0.36, tangentVel = null) {
-                const localPt = this.bodyMesh.worldToLocal(worldPoint.clone());
-                const invQuat = this.root.quaternion.clone().invert();
-                const localNormal = worldNormal.clone().applyQuaternion(invQuat).normalize();
-                const localTangent = tangentVel ? tangentVel.clone().applyQuaternion(invQuat) : null;
-
-                const radius = 0.65;
-                for (let i = 0; i < this.vCount; i++) {
-                    const rx = this.restPos[i * 3] - localPt.x;
-                    const ry = this.restPos[i * 3 + 1] - localPt.y;
-                    const rz = this.restPos[i * 3 + 2] - localPt.z;
-                    const d = Math.hypot(rx, ry, rz);
-
-                    if (d < radius) {
-                        const u = d / radius;
-                        const profile = u < 0.55
-                            ? -Math.cos((u / 0.55) * Math.PI * 0.5)
-                            : 0.30 * Math.sin(((u - 0.55) / 0.45) * Math.PI);
-                        const imp = profile * strength * this.softness[i] * 14.5;
-
-                        this.vel[i * 3]     += localNormal.x * imp;
-                        this.vel[i * 3 + 1] += localNormal.y * imp;
-                        this.vel[i * 3 + 2] += localNormal.z * imp;
-
-                        if (localTangent) {
-                            const shear = Math.cos(u * Math.PI * 0.5) * this.softness[i] * 5.2;
-                            this.vel[i * 3]     += localTangent.x * shear;
-                            this.vel[i * 3 + 1] += localTangent.y * shear;
-                            this.vel[i * 3 + 2] += localTangent.z * shear;
-                        }
-
-                        if (u < 0.72) {
-                            this.blush[i] = Math.min(1.0, this.blush[i] + (1 - u) * 0.65);
-                        }
-                    }
-                }
-                this.happyTimer = 1.4;
-            }
-
-            startPinchAtWorldPoint(worldPoint) {
-                const localPt = this.bodyMesh.worldToLocal(worldPoint.clone());
-                this.activePinch = {
-                    localCenter: localPt,
-                    currentPullOffset: new THREE.Vector3()
-                };
-            }
-
-            updatePinchWorldTarget(worldTarget) {
-                if (!this.activePinch) return;
-                const localTarget = this.bodyMesh.worldToLocal(worldTarget.clone());
-                const offset = localTarget.sub(this.activePinch.localCenter);
-                if (offset.length() > 0.58) {
-                    offset.setLength(0.58);
-                }
-                this.activePinch.currentPullOffset.copy(offset);
-            }
-
-            releasePinch() {
-                if (!this.activePinch) return;
-                this.activePinch = null;
-                this.happyTimer = 1.2;
-                sfx.playOink(1.08 + Math.random() * 0.15);
-            }
-
-            addMudSplatter(amount = 0.25) {
-                for (let i = 0; i < this.vCount; i++) {
-                    const y = this.restPos[i * 3 + 1];
-                    if (y < 0.15 && Math.random() < 0.35) {
-                        this.mud[i] = Math.min(1.0, this.mud[i] + amount * Math.random());
-                    }
-                }
-            }
-
-            scrubMudInBath(dt) {
-                let anyMud = false;
-                for (let i = 0; i < this.vCount; i++) {
-                    if (this.mud[i] > 0.001) {
-                        this.mud[i] = Math.max(0, this.mud[i] - dt * 0.65);
-                        anyMud = true;
-                    }
-                }
-                return anyMud;
-            }
-
-            updateSoftBodyVertices(dt, elapsed) {
-                const clampedDt = Math.min(dt, 0.033);
-                const posAttr = this.bodyMesh.geometry.attributes.position;
-                const colAttr = this.bodyMesh.geometry.attributes.color;
-
-                const curVel = new THREE.Vector3(this.body.velocity.x, this.body.velocity.y, this.body.velocity.z);
-                const accelWorld = curVel.clone().sub(this.prevVelocity).divideScalar(Math.max(0.008, clampedDt));
-                this.prevVelocity.copy(curVel);
-                accelWorld.clampLength(0, 28);
-                const invQuat = this.root.quaternion.clone().invert();
-                const localInertial = accelWorld.applyQuaternion(invQuat).multiplyScalar(-0.015);
-
-                const springK = gameState.activeBuff.id === 'bouncy' ? 46.0 : 62.0;
-                const laplacianK = 24.0;
-                const damping = Math.exp(-7.8 * clampedDt);
-                const breathWave = Math.sin(elapsed * 2.8) * 0.016;
-
-                for (let i = 0; i < this.vCount; i++) {
-                    const i3 = i * 3;
-                    let dx = this.disp[i3];
-                    let dy = this.disp[i3 + 1];
-                    let dz = this.disp[i3 + 2];
-
-                    let vx = this.vel[i3];
-                    let vy = this.vel[i3 + 1];
-                    let vz = this.vel[i3 + 2];
-
-                    const soft = this.softness[i];
-
-                    let fx = -springK * dx + localInertial.x * soft;
-                    let fy = -springK * dy + localInertial.y * soft;
-                    let fz = -springK * dz + localInertial.z * soft;
-
-                    const nbs = this.neighbors[i];
-                    if (nbs.length > 0) {
-                        let avgX = 0, avgY = 0, avgZ = 0;
-                        for (let j = 0; j < nbs.length; j++) {
-                            const nb3 = nbs[j] * 3;
-                            avgX += this.disp[nb3];
-                            avgY += this.disp[nb3 + 1];
-                            avgZ += this.disp[nb3 + 2];
-                        }
-                        const invLen = 1 / nbs.length;
-                        fx += (avgX * invLen - dx) * laplacianK;
-                        fy += (avgY * invLen - dy) * laplacianK;
-                        fz += (avgZ * invLen - dz) * laplacianK;
-                    }
-
-                    if (this.activePinch) {
-                        const px = this.restPos[i3] - this.activePinch.localCenter.x;
-                        const py = this.restPos[i3 + 1] - this.activePinch.localCenter.y;
-                        const pz = this.restPos[i3 + 2] - this.activePinch.localCenter.z;
-                        const dist = Math.hypot(px, py, pz);
-                        if (dist < 0.72) {
-                            const w = Math.pow(Math.cos((dist / 0.72) * Math.PI * 0.5), 1.5);
-                            fx += (this.activePinch.currentPullOffset.x * w - dx) * 145;
-                            fy += (this.activePinch.currentPullOffset.y * w - dy) * 145;
-                            fz += (this.activePinch.currentPullOffset.z * w - dz) * 145;
-                            this.blush[i] = Math.min(1.0, this.blush[i] + clampedDt * 1.6 * w);
-                        }
-                    }
-
-                    vx = (vx + fx * clampedDt) * damping;
-                    vy = (vy + fy * clampedDt) * damping;
-                    vz = (vz + fz * clampedDt) * damping;
-
-                    dx += vx * clampedDt;
-                    dy += vy * clampedDt;
-                    dz += vz * clampedDt;
-
-                    const dispLen = Math.hypot(dx, dy, dz);
-                    if (dispLen > 0.56) {
-                        const s = 0.56 / dispLen;
-                        dx *= s; dy *= s; dz *= s;
-                    }
-
-                    this.disp[i3] = dx;
-                    this.disp[i3 + 1] = dy;
-                    this.disp[i3 + 2] = dz;
-                    this.vel[i3] = vx;
-                    this.vel[i3 + 1] = vy;
-                    this.vel[i3 + 2] = vz;
-
-                    const rx = this.restPos[i3];
-                    const ry = this.restPos[i3 + 1];
-                    const rz = this.restPos[i3 + 2];
-                    const bScale = 1 + (ry < 0.25 ? breathWave : breathWave * 0.35);
-
-                    posAttr.setXYZ(i, rx * bScale + dx, ry * bScale + dy, rz + dz);
-
-                    if (this.blush[i] > 0) {
-                        this.blush[i] = Math.max(0, this.blush[i] - clampedDt * 0.35);
-                    }
-                    const bl = this.blush[i];
-                    const md = this.mud[i];
-
-                    let r = this.baseColors[i3];
-                    let g = this.baseColors[i3 + 1];
-                    let b = this.baseColors[i3 + 2];
-
-                    if (bl > 0.001) {
-                        r = r + (0.96 - r) * bl * 0.55;
-                        g = g + (0.32 - g) * bl * 0.55;
-                        b = b + (0.52 - b) * bl * 0.55;
-                    }
-                    if (md > 0.001) {
-                        r = r + (0.42 - r) * md * 0.75;
-                        g = g + (0.28 - g) * md * 0.75;
-                        b = b + (0.18 - b) * md * 0.75;
-                    }
-
-                    this.liveColors[i3] = r;
-                    this.liveColors[i3 + 1] = g;
-                    this.liveColors[i3 + 2] = b;
-                }
-
-                for (let g = 0; g < this.seamGroups.length; g++) {
-                    const grp = this.seamGroups[g];
-                    let sx = 0, sy = 0, sz = 0;
-                    for (let k = 0; k < grp.length; k++) {
-                        const idx = grp[k];
-                        sx += posAttr.getX(idx);
-                        sy += posAttr.getY(idx);
-                        sz += posAttr.getZ(idx);
-                    }
-                    sx /= grp.length; sy /= grp.length; sz /= grp.length;
-                    for (let k = 0; k < grp.length; k++) {
-                        posAttr.setXYZ(grp[k], sx, sy, sz);
-                    }
-                }
-
-                posAttr.needsUpdate = true;
-                colAttr.needsUpdate = true;
-                this.bodyMesh.geometry.computeVertexNormals();
-            }
-
-            updateAIAndAnimation(dt, elapsed) {
-                const weightScale = Math.min(1.55, 0.88 + Math.pow((gameState.weight - 5) / 140, 0.58) * 0.52);
-                this.visualGroup.scale.set(weightScale, weightScale * 0.96, weightScale);
-
-                const p = this.body.position;
-                const dFeed = Math.hypot(p.x - ZONES.FEED.pos.x, p.z - ZONES.FEED.pos.z);
-                const dSleep = Math.hypot(p.x - ZONES.SLEEP.pos.x, p.z - ZONES.SLEEP.pos.z);
-                const dPlay = Math.hypot(p.x - ZONES.PLAY.pos.x, p.z - ZONES.PLAY.pos.z);
-                const dBath = Math.hypot(p.x - ZONES.BATH.pos.x, p.z - ZONES.BATH.pos.z);
-                const dTramp = Math.hypot(p.x - TRAMPOLINE_POS.x, p.z - TRAMPOLINE_POS.z);
-
-                if (dTramp < 1.15 && p.y < 1.65 && this.aiState !== 'DRAGGED') {
-                    this.body.velocity.y = 9.2;
-                    sfx.playOink(1.22);
-                    spawn3DParticle('STAR', this.root.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
-                }
-
-                if (this.aiState !== 'DRAGGED') {
-                    if (dFeed < ZONES.FEED.radius && gameState.troughMask > 0) {
-                        this.aiState = 'EAT';
-                        gameState.stateLabel = '享用料理中';
-                        this.eatTimer += dt;
-                        if (this.eatTimer > 1.25) {
-                            this.eatTimer = 0;
-                            consumeTroughDish();
-                        }
-                    } else if (dSleep < ZONES.SLEEP.radius) {
-                        this.aiState = 'SLEEP';
-                        gameState.stateLabel = '香甜熟睡中';
-                        gameState.energy = Math.min(100, gameState.energy + dt * 4.5);
-                        if (Math.random() < dt * 1.4) {
-                            spawn3DParticle('SLEEP', this.root.position.clone().add(new THREE.Vector3(0, 2.0, 0.5)));
-                        }
-                    } else if (dBath < ZONES.BATH.radius) {
-                        this.aiState = 'BATH';
-                        gameState.stateLabel = '溫泉泡澡中';
-                        gameState.cleanliness = Math.min(100, gameState.cleanliness + dt * 8.5);
-                        gameState.mood = Math.min(100, gameState.mood + dt * 2.2);
-                        this.scrubMudInBath(dt);
-                        if (Math.random() < dt * 2.5) {
-                            spawn3DParticle('BUBBLE', this.root.position.clone().add(new THREE.Vector3(0, 1.4, 0)));
-                        }
-                    } else if (dPlay < ZONES.PLAY.radius) {
-                        this.aiState = 'PLAY';
-                        gameState.stateLabel = '歡樂玩耍中';
-                        gameState.mood = Math.min(100, gameState.mood + dt * 3.2);
-                    } else {
-                        this.aiState = 'WANDER';
-                        gameState.stateLabel = '悠閒散步中';
-                    }
-
-                    const moveSpeed = gameState.activeBuff.id === 'speedy' ? 4.6 : 3.2;
-                    if (this.targetZone) {
-                        const tx = this.targetZone.pos.x;
-                        const tz = this.targetZone.pos.z;
-                        const dist = Math.hypot(tx - p.x, tz - p.z);
-                        if (dist > 1.3) {
-                            const ang = Math.atan2(tx - p.x, tz - p.z);
-                            this.facingAngle = ang;
-                            this.body.velocity.x = Math.sin(ang) * moveSpeed;
-                            this.body.velocity.z = Math.cos(ang) * moveSpeed;
-                        } else {
-                            this.targetZone = null;
-                        }
-                    } else if (this.aiState === 'WANDER' || this.aiState === 'PLAY') {
-                        this.wanderTimer -= dt;
-                        if (this.wanderTimer <= 0) {
-                            this.wanderTimer = 2.8 + Math.random() * 3.5;
-                            if (gameState.troughMask > 0) {
-                                this.wanderTarget.copy(ZONES.FEED.pos);
-                            } else {
-                                const rAng = Math.random() * Math.PI * 2;
-                                const rDist = 2.0 + Math.random() * 7.5;
-                                this.wanderTarget.set(Math.cos(rAng) * rDist, 0, Math.sin(rAng) * rDist);
-                            }
-                        }
-                        const dx = this.wanderTarget.x - p.x;
-                        const dz = this.wanderTarget.z - p.z;
-                        const dist = Math.hypot(dx, dz);
-                        if (dist > 0.9) {
-                            const targetAng = Math.atan2(dx, dz);
-                            let diff = targetAng - this.facingAngle;
-                            while (diff > Math.PI) diff -= Math.PI * 2;
-                            while (diff < -Math.PI) diff += Math.PI * 2;
-                            this.facingAngle += diff * Math.min(1, dt * 5.0);
-                            this.body.velocity.x = Math.sin(this.facingAngle) * (moveSpeed * 0.68);
-                            this.body.velocity.z = Math.cos(this.facingAngle) * (moveSpeed * 0.68);
-                        }
-                    }
-                } else {
-                    gameState.stateLabel = '被抓起移動中';
-                }
-
-                this.root.position.set(p.x, p.y - this.radius, p.z);
-                this.root.rotation.y = this.facingAngle;
-
-                const hSpeed = Math.hypot(this.body.velocity.x, this.body.velocity.z);
-                if (hSpeed > 0.25 && this.aiState !== 'SLEEP') {
-                    this.walkCycle += dt * hSpeed * 3.4;
-                    const swing = Math.sin(this.walkCycle) * 0.42;
-                    this.legs[0].rotation.x = swing;
-                    this.legs[1].rotation.x = -swing;
-                    this.legs[2].rotation.x = -swing;
-                    this.legs[3].rotation.x = swing;
-                } else {
-                    this.legs.forEach(l => { l.rotation.x *= 0.85; });
-                }
-
-                const earBounce = Math.sin(elapsed * 4.2 + this.walkCycle) * 0.08;
-                this.leftEar.rotation.z = earBounce;
-                this.rightEar.rotation.z = -earBounce;
-                this.tailGroup.rotation.z = Math.sin(elapsed * 7.5) * (this.happyTimer > 0 ? 0.35 : 0.14);
-
-                if (this.happyTimer > 0) this.happyTimer = Math.max(0, this.happyTimer - dt);
-                this.blinkTimer -= dt;
-                if (this.blinkTimer <= 0) {
-                    this.isBlinking = !this.isBlinking;
-                    this.blinkTimer = this.isBlinking ? 0.14 : (2.4 + Math.random() * 2.8);
-                }
-                const targetLidRot = (this.aiState === 'SLEEP' || this.isBlinking) ? 0.05 : -Math.PI * 0.56;
-                this.leftEyelid.rotation.x += (targetLidRot - this.leftEyelid.rotation.x) * Math.min(1, dt * 16);
-                this.rightEyelid.rotation.x = this.leftEyelid.rotation.x;
-
-                // Snout breathing twitch & eyebrow expressive motion
-                const sniff = Math.sin(elapsed * 4.8) * 0.035;
-                if (this.snoutTipMesh) {
-                    this.snoutTipMesh.scale.set(1.15 + sniff, 0.85 + sniff * 0.6, 1);
-                }
-                if (this.leftBrow && this.rightBrow) {
-                    const browLift = (this.happyTimer > 0) ? -0.08 : (this.aiState === 'SLEEP' ? 0.06 : 0);
-                    this.leftBrow.position.y = 0.175 + browLift;
-                    this.rightBrow.position.y = 0.175 + browLift;
-                }
-
-                // Weapon & Shield Dynamic Motion
-                if (this.weaponMount) {
-                    if (this.weaponSwingTimer > 0) {
-                        this.weaponSwingTimer = Math.max(0, this.weaponSwingTimer - dt);
-                        const progress = (0.38 - this.weaponSwingTimer) / 0.38;
-                        this.weaponMount.rotation.x = Math.sin(progress * Math.PI) * 1.7 + 0.15;
-                        this.weaponMount.rotation.z = -0.15 - Math.sin(progress * Math.PI) * 0.45;
-                    } else {
-                        const idleWeaponSway = Math.sin(elapsed * 2.8) * 0.06;
-                        this.weaponMount.rotation.set(0.15 + idleWeaponSway, 0, -0.15);
-                    }
-                }
-                if (this.shieldMount) {
-                    if (this.defendBarrierTimer > 0) {
-                        this.defendBarrierTimer = Math.max(0, this.defendBarrierTimer - dt);
-                        this.shieldMount.rotation.x = 0.55;
-                        this.shieldMount.position.z = 0.65;
-                    } else {
-                        const idleShieldSway = Math.cos(elapsed * 2.8) * 0.05;
-                        this.shieldMount.rotation.set(0.12 + idleShieldSway, 0, 0.15);
-                        this.shieldMount.position.z = 0.45;
-                    }
-                }
-
-                // Golden Monument Radiant Aura Effect
-                if (gameState.estateLevels && gameState.estateLevels.golden_statue && Math.random() < dt * 2.5) {
-                    spawn3DParticle('SPARKLE', this.root.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.8, Math.random() * 2.0, (Math.random() - 0.5) * 1.8)));
-                }
-
-                this.updateSoftBodyVertices(dt, elapsed);
-            }
-        }
+        // Note: PerVertexSoftBodyPig & PigManager are modularly loaded from js/pig.js
 
         function generateNewCravingOrder() {
             const types = ['SINGLE_ING', 'PAIR_ING', 'COUNT_TIER'];
@@ -4973,6 +3620,105 @@
                     });
                     container.appendChild(card);
                 });
+            } else if (currentShopTab === 'wardrobe') {
+                const curPig = gameState.getActivePig();
+                OUTFITS_CATALOG.forEach(o => {
+                    const owned = gameState.ownedOutfits && gameState.ownedOutfits[o.id];
+                    const isEquipped = curPig.currentOutfit === o.id;
+                    const canAfford = gameState.coins >= o.price;
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-2xl border flex flex-col justify-between transition ${
+                        isEquipped ? 'bg-slate-800/90 border-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.25)]' : (owned ? 'bg-slate-800/70 border-slate-700' : 'bg-slate-900/80 border-slate-700')
+                    }`;
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-sm text-white">${o.name}</span>
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${isEquipped ? 'bg-rose-500/20 text-rose-300' : (owned ? 'bg-slate-700 text-slate-300' : 'bg-amber-500/20 text-amber-300')}">
+                                    ${isEquipped ? '裝備中' : (owned ? '已擁有' : `${o.price} 金幣`)}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1">${o.desc}</p>
+                            <div class="mt-2 text-xs font-bold text-emerald-400">
+                                生命 +${o.hpBonus} · 攻擊 +${o.atkBonus} · 防禦 +${o.defBonus}
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-700/70 flex items-center justify-end">
+                            <button class="px-3 py-1 rounded-xl text-xs font-black transition ${
+                                isEquipped ? 'bg-slate-700 text-slate-300' : (owned ? 'bg-rose-500 text-white hover:bg-rose-400' : (canAfford ? 'bg-amber-400 text-slate-950 hover:bg-amber-300' : 'bg-slate-800 text-slate-500'))
+                            }">
+                                ${isEquipped ? '脫下服裝' : (owned ? '穿上服裝' : '購買服裝')}
+                            </button>
+                        </div>
+                    `;
+                    card.querySelector('button').addEventListener('click', () => {
+                        if (isEquipped) {
+                            curPig.currentOutfit = 'none';
+                            const inst = PigManager.getActivePigInstance();
+                            if (inst) inst.setOutfit('none');
+                            sfx.playSoftTouch(400);
+                        } else if (owned) {
+                            curPig.currentOutfit = o.id;
+                            const inst = PigManager.getActivePigInstance();
+                            if (inst) inst.setOutfit(o.id);
+                            sfx.playSoftTouch(480);
+                        } else if (canAfford) {
+                            gameState.coins -= o.price;
+                            if (!gameState.ownedOutfits) gameState.ownedOutfits = {};
+                            gameState.ownedOutfits[o.id] = true;
+                            curPig.currentOutfit = o.id;
+                            const inst = PigManager.getActivePigInstance();
+                            if (inst) inst.setOutfit(o.id);
+                            sfx.playCoinDing();
+                        }
+                        saveGameState();
+                        renderShopModalContent();
+                    });
+                    container.appendChild(card);
+                });
+            } else if (currentShopTab === 'dyes') {
+                const curPig = gameState.getActivePig();
+                PIG_COLOR_PRESETS.forEach(c => {
+                    const isCurrent = curPig.color && curPig.color.toLowerCase() === c.hex.toLowerCase();
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-2xl border flex flex-col justify-between transition ${
+                        isCurrent ? 'bg-slate-800/90 border-teal-400 shadow-[0_0_12px_rgba(45,212,191,0.25)]' : 'bg-slate-900/80 border-slate-700'
+                    }`;
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-10 h-10 rounded-2xl border-2 border-white/40 shadow-inner shrink-0" style="background-color: ${c.hex}"></span>
+                            <div>
+                                <div class="font-black text-sm text-white">${c.name}</div>
+                                <div class="text-[11px] text-slate-400 font-mono">${c.hex}</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-700/70 flex items-center justify-between">
+                            <span class="text-[10px] text-teal-300 font-semibold">${isCurrent ? '當前體色' : '消耗 30 金幣'}</span>
+                            <button class="px-3 py-1 rounded-xl text-xs font-black transition ${
+                                isCurrent ? 'bg-slate-700 text-slate-400 cursor-default' : (gameState.coins >= 30 ? 'bg-teal-400 text-slate-950 hover:bg-teal-300' : 'bg-slate-800 text-slate-500')
+                            }">
+                                ${isCurrent ? '使用中' : '進行染色'}
+                            </button>
+                        </div>
+                    `;
+                    if (!isCurrent) {
+                        card.querySelector('button').addEventListener('click', () => {
+                            if (gameState.coins < 30) {
+                                spawnFloatingText('金幣不足 30 無法染色', new THREE.Vector3(0, 2.5, 0), '#f87171');
+                                return;
+                            }
+                            gameState.coins -= 30;
+                            curPig.color = c.hex;
+                            const inst = PigManager.getActivePigInstance();
+                            if (inst) inst.setSkinColor(c.hex);
+                            sfx.playSplash();
+                            saveGameState();
+                            renderShopModalContent();
+                            if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
+                        });
+                    }
+                    container.appendChild(card);
+                });
             } else if (currentShopTab === 'estate') {
                 ESTATE_CATALOG.forEach(est => {
                     const owned = !!(gameState.estateLevels && gameState.estateLevels[est.id]);
@@ -5156,373 +3902,7 @@
             }
         }
 
-        const BattleManager = {
-            currentStage: null,
-            inBattle: false,
-            playerHp: 100,
-            playerMaxHp: 100,
-            enemyHp: 100,
-            enemyMaxHp: 100,
-            playerAtk: 15,
-            playerDef: 5,
-            playerCrit: 5,
-            enemyAtk: 15,
-            enemyDef: 3,
-            isGuarding: false,
-            enemyStunned: false,
-            turn: 'player',
-            rollCooldown: 0,
-            healUsesLeft: 3,
-
-            calcPlayerStats() {
-                let weaponAtk = 0;
-                let weaponCrit = 0;
-                if (gameState.equippedWeapon) {
-                    const w = WEAPONS_CATALOG.find(x => x.id === gameState.equippedWeapon);
-                    if (w) { weaponAtk = w.atkBonus || 0; weaponCrit = w.critBonus || 0; }
-                }
-                let shieldDef = 0;
-                let shieldHp = 0;
-                if (gameState.equippedShield) {
-                    const s = SHIELDS_CATALOG.find(x => x.id === gameState.equippedShield);
-                    if (s) { shieldDef = s.defBonus || 0; shieldHp = s.hpBonus || 0; }
-                }
-                const hasDummy = !!(gameState.estateLevels && gameState.estateLevels.combat_dummy);
-                const dummyAtk = hasDummy ? 40 : 0;
-                const dummyDef = hasDummy ? 25 : 0;
-
-                const baseHp = 120 + Math.round(gameState.weight * 14) + shieldHp;
-                const baseAtk = 18 + Math.round(gameState.intimacyLevel * 8) + weaponAtk + dummyAtk;
-                const baseDef = 6 + Math.round(gameState.weight * 0.9) + shieldDef + dummyDef;
-                const baseCrit = 6 + (gameState.intimacyLevel * 2) + weaponCrit;
-
-                return { maxHp: baseHp, atk: baseAtk, def: baseDef, crit: baseCrit };
-            },
-
-            openModal() {
-                const modal = document.getElementById('modal-battle');
-                if (!modal) return;
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.getElementById('battle-modal-coins').textContent = Math.floor(gameState.coins);
-                this.renderStageSelector();
-                const defaultStage = BATTLE_STAGES[(gameState.battleStagesUnlocked || 1) - 1] || BATTLE_STAGES[0];
-                this.startBattle(defaultStage);
-            },
-
-            closeModal() {
-                const modal = document.getElementById('modal-battle');
-                if (!modal) return;
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                this.inBattle = false;
-            },
-
-            renderStageSelector() {
-                const bar = document.getElementById('battle-stage-selector-bar');
-                if (!bar) return;
-                bar.innerHTML = '';
-                const maxUnlocked = gameState.battleStagesUnlocked || 1;
-                BATTLE_STAGES.forEach(st => {
-                    const unlocked = st.id <= maxUnlocked;
-                    const isCurrent = this.currentStage && this.currentStage.id === st.id;
-                    const btn = document.createElement('button');
-                    btn.className = `px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
-                        isCurrent
-                            ? 'bg-rose-500 text-white shadow'
-                            : (unlocked ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700' : 'bg-slate-900/60 text-slate-500 border border-slate-800 cursor-not-allowed')
-                    }`;
-                    btn.innerHTML = `<span>${st.icon} 第${st.id}關 · ${st.name}</span> ${!unlocked ? '🔒' : ''}`;
-                    if (unlocked) {
-                        btn.addEventListener('click', () => {
-                            this.startBattle(st);
-                            sfx.playSoftTouch(460);
-                        });
-                    }
-                    bar.appendChild(btn);
-                });
-            },
-
-            startBattle(stage) {
-                this.currentStage = stage;
-                this.inBattle = true;
-                const stats = this.calcPlayerStats();
-                this.playerMaxHp = stats.maxHp;
-                this.playerHp = stats.maxHp;
-                this.playerAtk = stats.atk;
-                this.playerDef = stats.def;
-                this.playerCrit = stats.crit;
-
-                this.enemyMaxHp = stage.hp;
-                this.enemyHp = stage.hp;
-                this.enemyAtk = stage.atk;
-                this.enemyDef = stage.def || 4;
-
-                this.isGuarding = false;
-                this.enemyStunned = false;
-                this.turn = 'player';
-                this.rollCooldown = 0;
-                this.healUsesLeft = 3;
-
-                const log = document.getElementById('b-combat-log');
-                if (log) log.innerHTML = '';
-                this.addLog(`⚔️ 進入【${stage.name}】！野豬勇士遭遇 Boss【${stage.boss}】！`, '#fbbf24');
-                this.updateUI();
-                this.renderStageSelector();
-            },
-
-            updateUI() {
-                document.getElementById('b-player-name').textContent = gameState.pigName;
-                const w = WEAPONS_CATALOG.find(x => x.id === gameState.equippedWeapon);
-                const s = SHIELDS_CATALOG.find(x => x.id === gameState.equippedShield);
-                document.getElementById('b-player-equip-text').textContent = `裝備：${w ? w.name : '無武器'} ｜ ${s ? s.name : '無護甲'}`;
-                document.getElementById('b-player-atk').textContent = this.playerAtk;
-                document.getElementById('b-player-def').textContent = this.playerDef;
-                document.getElementById('b-player-crit').textContent = `${this.playerCrit}%`;
-                document.getElementById('b-player-hp-text').textContent = `${Math.max(0, this.playerHp)} / ${this.playerMaxHp}`;
-                const pHpPct = Math.max(0, Math.min(100, (this.playerHp / this.playerMaxHp) * 100));
-                document.getElementById('b-player-hp-bar').style.width = `${pHpPct}%`;
-
-                if (this.currentStage) {
-                    document.getElementById('b-enemy-name').textContent = this.currentStage.boss;
-                    document.getElementById('b-enemy-icon').textContent = this.currentStage.icon;
-                    document.getElementById('b-enemy-sub').textContent = this.currentStage.desc;
-                    document.getElementById('b-enemy-atk').textContent = this.enemyAtk;
-                    document.getElementById('b-enemy-def').textContent = this.enemyDef;
-                    document.getElementById('b-enemy-reward').textContent = this.currentStage.reward;
-                    document.getElementById('b-enemy-hp-text').textContent = `${Math.max(0, this.enemyHp)} / ${this.enemyMaxHp}`;
-                    const eHpPct = Math.max(0, Math.min(100, (this.enemyHp / this.enemyMaxHp) * 100));
-                    document.getElementById('b-enemy-hp-bar').style.width = `${eHpPct}%`;
-                    document.getElementById('battle-badge-stage').textContent = `第 ${this.currentStage.id} 區`;
-                }
-
-                const isPlayerTurn = this.turn === 'player';
-                const btnTackle = document.getElementById('btn-battle-tackle');
-                const btnRoll = document.getElementById('btn-battle-roll');
-                const btnGuard = document.getElementById('btn-battle-guard');
-                const btnHeal = document.getElementById('btn-battle-heal');
-
-                if (btnTackle) btnTackle.disabled = !isPlayerTurn;
-                if (btnRoll) {
-                    btnRoll.disabled = !isPlayerTurn || this.rollCooldown > 0;
-                    document.getElementById('b-btn-roll-label').textContent = this.rollCooldown > 0 ? `🌀 冷卻中 (${this.rollCooldown}回合)` : '🌀 肉彈戰車旋轉';
-                }
-                if (btnGuard) btnGuard.disabled = !isPlayerTurn;
-                if (btnHeal) {
-                    btnHeal.disabled = !isPlayerTurn || this.healUsesLeft <= 0;
-                    document.getElementById('b-btn-heal-label').textContent = `🍖 鮮食急救 (剩${this.healUsesLeft}次)`;
-                }
-
-                document.getElementById('battle-modal-coins').textContent = Math.floor(gameState.coins);
-            },
-
-            addLog(text, color = '#f8fafc') {
-                const log = document.getElementById('b-combat-log');
-                if (!log) return;
-                const row = document.createElement('div');
-                row.style.color = color;
-                row.textContent = `> ${text}`;
-                log.appendChild(row);
-                log.scrollTop = log.scrollHeight;
-            },
-
-            spawnDamage(targetType, dmg, isCrit = false, isHeal = false) {
-                const card = targetType === 'player' ? document.getElementById('b-player-card') : document.getElementById('b-enemy-card');
-                if (!card) return;
-                const el = document.createElement('div');
-                el.className = 'combat-floating-dmg';
-                el.style.left = '50%';
-                el.style.top = '40%';
-                if (isHeal) {
-                    el.textContent = `+${dmg} HP`;
-                    el.style.color = '#34d399';
-                    el.style.fontSize = '18px';
-                } else if (isCrit) {
-                    el.textContent = `🔥 CRIT -${dmg}!`;
-                    el.style.color = '#fbbf24';
-                    el.style.fontSize = '22px';
-                } else {
-                    el.textContent = `-${dmg}`;
-                    el.style.color = targetType === 'player' ? '#f43f5e' : '#ffffff';
-                    el.style.fontSize = '17px';
-                }
-                card.appendChild(el);
-                setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
-            },
-
-            shakeScreen() {
-                const arena = document.getElementById('battle-arena');
-                if (!arena) return;
-                arena.classList.remove('battle-shake');
-                void arena.offsetWidth;
-                arena.classList.add('battle-shake');
-                setTimeout(() => arena.classList.remove('battle-shake'), 400);
-            },
-
-            playerTackle() {
-                if (this.turn !== 'player') return;
-                this.turn = 'busy';
-                if (pig) pig.playAttackAnimation();
-                this.shakeScreen();
-
-                const isCrit = Math.random() * 100 < this.playerCrit;
-                const mult = isCrit ? 1.85 : (0.9 + Math.random() * 0.3);
-                const rawDmg = Math.max(12, Math.round((this.playerAtk * mult) - (this.enemyDef * 0.4)));
-                this.enemyHp = Math.max(0, this.enemyHp - rawDmg);
-                this.spawnDamage('enemy', rawDmg, isCrit, false);
-                this.addLog(`${gameState.pigName} 使出【猛烈衝撞】，${isCrit ? '🔥 命中要害！' : ''}重創 ${this.currentStage.boss} ${rawDmg} 點傷害！`, isCrit ? '#fbbf24' : '#f472b6');
-
-                this.updateUI();
-                if (this.enemyHp <= 0) {
-                    this.handleVictory();
-                } else {
-                    setTimeout(() => this.startEnemyTurn(), 700);
-                }
-            },
-
-            playerRoll() {
-                if (this.turn !== 'player' || this.rollCooldown > 0) return;
-                this.turn = 'busy';
-                this.rollCooldown = 3;
-                if (pig) pig.playAttackAnimation();
-                this.shakeScreen();
-
-                const isCrit = Math.random() * 100 < this.playerCrit;
-                const mult = (isCrit ? 2.8 : 2.2) * (0.95 + Math.random() * 0.2);
-                const rawDmg = Math.max(25, Math.round((this.playerAtk * mult) - (this.enemyDef * 0.3)));
-                this.enemyHp = Math.max(0, this.enemyHp - rawDmg);
-                this.spawnDamage('enemy', rawDmg, isCrit, false);
-
-                const stunProc = Math.random() < 0.35;
-                if (stunProc) {
-                    this.enemyStunned = true;
-                    this.addLog(`🌀 ${gameState.pigName} 巨大身軀碾壓！${this.currentStage.boss} 陷入暈眩！造成 ${rawDmg} 傷害！`, '#a78bfa');
-                } else {
-                    this.addLog(`🌀 ${gameState.pigName} 肉彈戰車旋轉撞擊！造成 ${rawDmg} 點傷害！`, '#f59e0b');
-                }
-
-                this.updateUI();
-                if (this.enemyHp <= 0) {
-                    this.handleVictory();
-                } else {
-                    setTimeout(() => this.startEnemyTurn(), 700);
-                }
-            },
-
-            playerGuard() {
-                if (this.turn !== 'player') return;
-                this.turn = 'busy';
-                this.isGuarding = true;
-                if (pig) pig.playDefendAnimation();
-                this.addLog(`🛡️ ${gameState.pigName} 架起堅固防護姿態，下回合傷害減免 70% 並蓄力反擊！`, '#38bdf8');
-                this.updateUI();
-                setTimeout(() => this.startEnemyTurn(), 600);
-            },
-
-            playerHeal() {
-                if (this.turn !== 'player' || this.healUsesLeft <= 0) return;
-                this.turn = 'busy';
-                this.healUsesLeft--;
-                const healAmt = Math.round(this.playerMaxHp * 0.38);
-                this.playerHp = Math.min(this.playerMaxHp, this.playerHp + healAmt);
-                sfx.playChime();
-                this.spawnDamage('player', healAmt, false, true);
-                this.addLog(`🍖 ${gameState.pigName} 狼吞虎嚥大吃一口，恢復了 ${healAmt} 點生命值！`, '#34d399');
-                this.updateUI();
-                setTimeout(() => this.startEnemyTurn(), 600);
-            },
-
-            startEnemyTurn() {
-                if (this.enemyHp <= 0) return;
-                this.turn = 'enemy';
-
-                if (this.enemyStunned) {
-                    this.addLog(`💫 ${this.currentStage.boss} 還在暈眩中，無法動彈！`, '#a78bfa');
-                    this.enemyStunned = false;
-                    this.endTurnPassToPlayer();
-                    return;
-                }
-
-                sfx.playHit();
-                this.shakeScreen();
-
-                let dmg = Math.max(6, Math.round((this.enemyAtk * (0.85 + Math.random() * 0.35)) - (this.playerDef * 0.5)));
-                if (this.isGuarding) {
-                    dmg = Math.max(2, Math.round(dmg * 0.3));
-                    const counterDmg = Math.max(10, Math.round(this.playerAtk * 0.6));
-                    this.enemyHp = Math.max(0, this.enemyHp - counterDmg);
-                    this.spawnDamage('enemy', counterDmg, false, false);
-                    this.addLog(`🛡️ 格擋成功！傷害降至 ${dmg} 點，並絕地反彈造成 ${counterDmg} 點傷害！`, '#38bdf8');
-                } else {
-                    this.addLog(`💥 ${this.currentStage.boss} 狂暴反擊，對 ${gameState.pigName} 造成 ${dmg} 點傷害！`, '#f43f5e');
-                }
-
-                this.playerHp = Math.max(0, this.playerHp - dmg);
-                this.spawnDamage('player', dmg, false, false);
-                this.isGuarding = false;
-
-                this.updateUI();
-                if (this.playerHp <= 0) {
-                    this.handleDefeat();
-                } else if (this.enemyHp <= 0) {
-                    this.handleVictory();
-                } else {
-                    this.endTurnPassToPlayer();
-                }
-            },
-
-            endTurnPassToPlayer() {
-                if (this.rollCooldown > 0) this.rollCooldown--;
-                this.turn = 'player';
-                this.updateUI();
-            },
-
-            handleVictory() {
-                this.turn = 'ended';
-                sfx.playVictoryFanfare();
-                const reward = this.currentStage.reward;
-                gameState.coins += reward;
-                gameState.battleWins = (gameState.battleWins || 0) + 1;
-
-                let nextUnlocked = false;
-                if (this.currentStage.id >= (gameState.battleStagesUnlocked || 1) && this.currentStage.id < 5) {
-                    gameState.battleStagesUnlocked = this.currentStage.id + 1;
-                    nextUnlocked = true;
-                }
-
-                this.addLog(`🎉 遠征大捷！成功擊潰 Boss【${this.currentStage.boss}】！獲得 +${reward} 金幣！`, '#34d399');
-                if (nextUnlocked) {
-                    this.addLog(`🔓 恭喜解鎖全新冒險區域【第 ${gameState.battleStagesUnlocked} 區】！`, '#fbbf24');
-                }
-
-                if (pig) {
-                    pig.body.velocity.y = 7.0;
-                    pig.happyTimer = 3.0;
-                    spawn3DParticle('STAR', pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)));
-                    spawnFloatingText(`討伐勝利！+${reward} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 3.0, 0)), '#34d399');
-                }
-
-                if (typeof MultiplayerSync !== 'undefined') {
-                    MultiplayerSync.recordAction('BATTLE_WIN', reward, {
-                        stage_name: this.currentStage.name,
-                        boss: this.currentStage.boss,
-                        unlocked_stages: gameState.battleStagesUnlocked
-                    });
-                }
-
-                saveGameState();
-                updateHUD();
-                this.renderStageSelector();
-            },
-
-            handleDefeat() {
-                this.turn = 'ended';
-                sfx.playSnort();
-                this.addLog(`💀 戰鬥失利！${gameState.pigName} 體力不支，退回牧場休養生息...`, '#94a3b8');
-                this.addLog(`💡 提示：增加小豬體重長血量、提升親密度增加暴擊，並到商店添購武器防具！`, '#38bdf8');
-                this.updateUI();
-            }
-        };
+        // Note: BattleManager is modularly loaded from js/battle.js
 
         function renderCodexModalList() {
             const statusFilter = document.getElementById('codex-filter-status').value;
@@ -5707,6 +4087,7 @@
                 btn.addEventListener('click', () => {
                     const tab = btn.dataset.mtab;
                     if (tab === 'battle') { BattleManager.openModal(); return; }
+                    if (tab === 'farm') { FarmSystem.openModal(); return; }
                     if (tab === 'shop') { openShopModal('toys'); return; }
                     if (tab === 'upgrades') { openShopModal('upgrades'); return; }
                     if (tab === 'biomes') { openShopModal('biomes'); return; }
@@ -6232,9 +4613,26 @@
             // Step Cannon.js Physics
             world.step(1 / 60, dt, 3);
 
-            // Update Soft-Body Pig
-            if (pig) {
+            // Update Multi-Pig Simulation
+            if (typeof PigManager !== 'undefined') {
+                PigManager.update(dt, elapsed);
+            } else if (pig) {
                 pig.updateAIAndAnimation(dt, elapsed);
+            }
+
+            // Pig-to-Pig Interactions (social greetings, nuzzling, tag play)
+            if (typeof InteractionSystem !== 'undefined') {
+                InteractionSystem.update(dt);
+            }
+
+            // Update 3D Farmland crop growth & autonomous harvesting
+            if (typeof FarmSystem !== 'undefined') {
+                FarmSystem.update(dt);
+            }
+
+            // Smooth Camera Panning & Focusing
+            if (typeof CameraManager !== 'undefined') {
+                CameraManager.update(dt);
             }
 
             // Sync Dynamic 3D Ingredients
@@ -6342,12 +4740,36 @@
         window.onload = function () {
             buildCountrysideEnvironment();
             buildPantryStandAndToys();
-            pig = new PerVertexSoftBodyPig();
+
+            // Initialize camera panning manager
+            if (typeof CameraManager !== 'undefined') {
+                CameraManager.init(camera, controls);
+            }
+
+            // Initialize 3D farmland system
+            if (typeof FarmSystem !== 'undefined') {
+                FarmSystem.init();
+            }
+
+            // Initialize multi-pig pasture manager
+            if (typeof PigManager !== 'undefined') {
+                PigManager.init(gameState.pigs);
+                pig = PigManager.getActivePigInstance();
+            } else {
+                pig = new PerVertexSoftBodyPig();
+            }
+
             buildBottomIngredientCards();
             generateNewCravingOrder();
             syncTroughRecipeUI();
             updateHUD();
             bindUIEvents();
+
+            // Initialize UIManager (Roster bar, adopt modal, wardrobe, D-Pad)
+            if (typeof UIManager !== 'undefined') {
+                UIManager.init();
+            }
+
             animateLoop();
 
             // Auto join or create multiplayer pet room
@@ -6355,6 +4777,9 @@
                 MultiplayerSync.joinOrCreateRoom(null, gameState).then(res => {
                     if (res && res.petData) {
                         applyServerPetToGameState(res.petData);
+                        if (typeof PigManager !== 'undefined') {
+                            PigManager.syncFromGameState(gameState.pigs);
+                        }
                     }
                 });
             }
