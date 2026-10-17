@@ -155,6 +155,11 @@
                     upgrade_levels: (initialFallbackState && initialFallbackState.upgradeLevels) || { touch_power: 0, touch_crit: 0, auto_arm: 0, auto_ticket: 0, auto_chef: 0, auto_truffle: 0 },
                     trough_mask: (initialFallbackState && initialFallbackState.troughMask) || 0,
                     unlocked_recipes: (initialFallbackState && initialFallbackState.unlockedRecipes) || {},
+                    equipped_weapon: (initialFallbackState && initialFallbackState.equippedWeapon) || null,
+                    equipped_shield: (initialFallbackState && initialFallbackState.equippedShield) || null,
+                    owned_equip: (initialFallbackState && initialFallbackState.ownedEquip) || {},
+                    estate_levels: (initialFallbackState && initialFallbackState.estateLevels) || {},
+                    unlocked_stages: (initialFallbackState && initialFallbackState.battleStagesUnlocked) || 1,
                     last_sync_at: new Date().toISOString()
                 };
 

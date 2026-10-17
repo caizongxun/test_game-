@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS public.pets (
     upgrade_levels JSONB NOT NULL DEFAULT '{"touch_power":0,"touch_crit":0,"auto_arm":0,"auto_ticket":0,"auto_chef":0,"auto_truffle":0}'::jsonb,
     trough_mask INT NOT NULL DEFAULT 0,
     unlocked_recipes JSONB NOT NULL DEFAULT '{}'::jsonb,
+    equipped_weapon VARCHAR(32) DEFAULT NULL,
+    equipped_shield VARCHAR(32) DEFAULT NULL,
+    owned_equip JSONB NOT NULL DEFAULT '{}'::jsonb,
+    estate_levels JSONB NOT NULL DEFAULT '{}'::jsonb,
+    unlocked_stages INT NOT NULL DEFAULT 1,
     last_sync_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -98,6 +103,11 @@ BEGIN
         upgrade_levels = CASE WHEN p_patch ? 'upgrade_levels' THEN p_patch->'upgrade_levels' ELSE v_pet.upgrade_levels END,
         trough_mask = COALESCE((p_patch->>'trough_mask')::INT, v_pet.trough_mask),
         unlocked_recipes = CASE WHEN p_patch ? 'unlocked_recipes' THEN p_patch->'unlocked_recipes' ELSE v_pet.unlocked_recipes END,
+        equipped_weapon = CASE WHEN p_patch ? 'equipped_weapon' THEN p_patch->>'equipped_weapon' ELSE v_pet.equipped_weapon END,
+        equipped_shield = CASE WHEN p_patch ? 'equipped_shield' THEN p_patch->>'equipped_shield' ELSE v_pet.equipped_shield END,
+        owned_equip = CASE WHEN p_patch ? 'owned_equip' THEN p_patch->'owned_equip' ELSE v_pet.owned_equip END,
+        estate_levels = CASE WHEN p_patch ? 'estate_levels' THEN p_patch->'estate_levels' ELSE v_pet.estate_levels END,
+        unlocked_stages = COALESCE((p_patch->>'unlocked_stages')::INT, v_pet.unlocked_stages),
         updated_at = NOW(),
         last_sync_at = NOW()
     WHERE room_code = p_room_code

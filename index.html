@@ -163,6 +163,31 @@
             transform: translateY(110%);
             pointer-events: none;
         }
+        @keyframes battleShake {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-6px, 4px); }
+            40% { transform: translate(6px, -4px); }
+            60% { transform: translate(-4px, -2px); }
+            80% { transform: translate(4px, 2px); }
+            100% { transform: translate(0, 0); }
+        }
+        .battle-shake {
+            animation: battleShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes damageFloat {
+            0% { opacity: 0; transform: translateY(0) scale(0.6); }
+            20% { opacity: 1; transform: translateY(-12px) scale(1.2); }
+            80% { opacity: 1; transform: translateY(-28px) scale(1.0); }
+            100% { opacity: 0; transform: translateY(-44px) scale(0.85); }
+        }
+        .combat-floating-dmg {
+            position: absolute;
+            pointer-events: none;
+            font-weight: 900;
+            animation: damageFloat 0.9s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            z-index: 60;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        }
     </style>
 </head>
 <body class="text-slate-100 antialiased">
@@ -310,9 +335,14 @@
                 </div>
             </div>
 
+            <!-- Open Battle / Expedition -->
+            <button id="btn-open-battle-desktop" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-black text-xs shadow-lg transition flex items-center gap-1.5 animate-pulse">
+                <span>⚔️ 野豬遠征冒險</span>
+            </button>
+
             <!-- Open Shop & 24 Toys -->
             <button id="btn-open-shop-desktop" class="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs shadow transition">
-                牧場商店與玩具
+                牧場商店與武庫
             </button>
 
             <!-- Open Upgrades -->
@@ -430,6 +460,9 @@
                     <span><span id="coin-balance-mobile">300</span> 金幣</span>
                     <span class="text-[10px] text-emerald-300 font-semibold">(+<span id="coin-per-sec-mobile">0</span>/s)</span>
                 </div>
+                <button id="btn-open-battle-mobile" class="px-2 py-1 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] font-black border border-red-400/50 flex items-center gap-1 shadow">
+                    <span>⚔️ 遠征</span>
+                </button>
                 <button id="btn-open-codex-mobile" class="px-2 py-1 rounded-lg bg-pink-500/25 border border-pink-400/40 text-pink-200 text-[10px] font-bold">
                     圖鑑
                 </button>
@@ -508,9 +541,10 @@
     </div>
 
     <!-- Mobile Bottom Tab Bar -->
-    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-2 inset-x-2 z-20 hud-glass rounded-2xl p-1.5 grid grid-cols-5 gap-1 text-[11px] font-bold">
+    <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-2 inset-x-2 z-20 hud-glass rounded-2xl p-1.5 grid grid-cols-6 gap-1 text-[11px] font-bold">
         <button data-mtab="feed" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">餵食料理</button>
-        <button data-mtab="shop" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">商店玩具</button>
+        <button data-mtab="battle" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-rose-300 font-black transition">遠征戰鬥</button>
+        <button data-mtab="shop" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">商店武庫</button>
         <button data-mtab="upgrades" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">賺錢升級</button>
         <button data-mtab="biomes" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">更換背景</button>
         <button data-mtab="nav" class="mobile-nav-btn py-2 rounded-xl border border-transparent text-slate-300 transition">區域導航</button>
@@ -535,19 +569,28 @@
                 </div>
             </div>
 
-            <!-- 4 Category Tabs -->
+            <!-- 7 Category Tabs -->
             <div class="px-4 sm:px-6 py-2.5 bg-slate-900/40 border-b border-slate-800 flex flex-wrap gap-2 text-xs">
                 <button data-shoptab="toys" class="shop-tab-btn active px-3.5 py-1.5 rounded-xl border border-slate-700 text-slate-200 transition">
-                    3D 物理玩具 (24款)
+                    🧸 3D玩具 (24款)
+                </button>
+                <button data-shoptab="armory" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-rose-300 font-bold transition">
+                    ⚔️ 神兵武庫 (武器防具)
+                </button>
+                <button data-shoptab="estate" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-amber-300 font-bold transition">
+                    🏰 莊園設施 (金幣大亨)
+                </button>
+                <button data-shoptab="gacha" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-purple-300 font-bold transition">
+                    🎁 幸運盲盒 (神秘抽獎)
                 </button>
                 <button data-shoptab="food" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-slate-200 transition">
-                    鮮食採購 (10種)
+                    🥕 鮮食採購 (10種)
                 </button>
                 <button data-shoptab="upgrades" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-slate-200 transition">
-                    撫摸與自動賺錢升級
+                    ⚡ 賺錢技能升級
                 </button>
                 <button data-shoptab="biomes" class="shop-tab-btn px-3.5 py-1.5 rounded-xl border border-slate-700 text-slate-200 transition">
-                    3D 牧場背景主題 (6款)
+                    🌄 3D主題背景 (6款)
                 </button>
             </div>
 
@@ -760,6 +803,136 @@
                 </div>
             </div>
         </div>
+    <!-- Modal: Piggy Combat / Expedition Battle System (野豬遠征冒險) -->
+    <div id="modal-battle" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4">
+        <div class="hud-glass w-full max-w-4xl max-h-[92vh] rounded-3xl flex flex-col overflow-hidden border border-red-500/40 shadow-2xl">
+            <!-- Header -->
+            <div class="p-3.5 sm:px-6 border-b border-slate-700/80 flex items-center justify-between bg-gradient-to-r from-red-950/80 via-slate-900/90 to-slate-900/80">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">⚔️</span>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                            <span>野豬遠征勇者冒險</span>
+                            <span id="battle-badge-stage" class="text-xs px-2 py-0.5 rounded-full bg-red-500/25 border border-red-400/40 text-red-300 font-bold">第 1 區</span>
+                        </h2>
+                        <p class="text-[11px] text-slate-400">小豬體重增加生命、親密度增加暴擊，裝備武器防具討伐魔物贏取巨額金幣！</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="px-3 py-1 rounded-xl bg-slate-950 border border-amber-400/50 text-xs font-black text-amber-300">
+                        金幣：<span id="battle-modal-coins">300</span>
+                    </div>
+                    <button id="btn-close-battle" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 text-xs font-bold transition">
+                        關閉
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stage Select Bar -->
+            <div id="battle-stage-selector-bar" class="px-3.5 sm:px-6 py-2.5 bg-slate-900/50 border-b border-slate-800 flex items-center gap-2 overflow-x-auto text-xs">
+                <!-- 5 Stage Buttons rendered by JS -->
+            </div>
+
+            <!-- Battle Arena Screen -->
+            <div id="battle-arena" class="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col justify-between gap-4 bg-gradient-to-b from-slate-950/50 to-slate-900/60">
+                <!-- Top Combatants (Player vs Enemy) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Player Pig Card -->
+                    <div id="b-player-card" class="p-4 rounded-2xl bg-slate-900/80 border border-pink-500/40 relative overflow-hidden flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-11 h-11 rounded-2xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-2xl shadow">🐷</div>
+                                <div>
+                                    <div class="font-black text-sm text-white" id="b-player-name">粉紅圓圓</div>
+                                    <div class="text-[11px] text-pink-300 font-semibold" id="b-player-equip-text">裝備：無武器 ｜ 無護甲</div>
+                                </div>
+                            </div>
+                            <div class="text-right text-[11px] text-slate-300">
+                                <div>攻擊 <span id="b-player-atk" class="text-rose-400 font-black">25</span> ｜ 防禦 <span id="b-player-def" class="text-sky-400 font-black">12</span></div>
+                                <div>暴擊率 <span id="b-player-crit" class="text-amber-400 font-black">10%</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Player HP Bar -->
+                        <div class="mt-3">
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-pink-300">小豬生命值</span>
+                                <span id="b-player-hp-text" class="text-white">180 / 180</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-950 rounded-full border border-slate-700 overflow-hidden">
+                                <div id="b-player-hp-bar" class="h-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-300 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enemy Boss Card -->
+                    <div id="b-enemy-card" class="p-4 rounded-2xl bg-slate-900/80 border border-red-500/40 relative overflow-hidden flex flex-col justify-between">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-11 h-11 rounded-2xl bg-red-500/20 border border-red-400/40 flex items-center justify-center text-2xl shadow" id="b-enemy-icon">🥕</div>
+                                <div>
+                                    <div class="font-black text-sm text-white" id="b-enemy-name">蹦跳野兔長老</div>
+                                    <div class="text-[11px] text-red-300 font-semibold" id="b-enemy-sub">蘿蔔守護者 · 敏捷突刺</div>
+                                </div>
+                            </div>
+                            <div class="text-right text-[11px] text-slate-300">
+                                <div>攻擊 <span id="b-enemy-atk" class="text-red-400 font-black">14</span> ｜ 防禦 <span id="b-enemy-def" class="text-slate-400 font-black">4</span></div>
+                                <div class="text-amber-300 font-bold">過關賞金：<span id="b-enemy-reward">70</span> 金幣</div>
+                            </div>
+                        </div>
+
+                        <!-- Enemy HP Bar -->
+                        <div class="mt-3">
+                            <div class="flex justify-between text-xs font-bold mb-1">
+                                <span class="text-red-300">Boss 生命值</span>
+                                <span id="b-enemy-hp-text" class="text-white">160 / 160</span>
+                            </div>
+                            <div class="w-full h-3 bg-slate-950 rounded-full border border-slate-700 overflow-hidden">
+                                <div id="b-enemy-hp-bar" class="h-full bg-gradient-to-r from-red-500 to-amber-500 transition-all duration-300 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle: Combat Log & Damage Number Screen -->
+                <div class="relative rounded-2xl bg-slate-950/80 border border-slate-800 p-3 h-32 overflow-y-auto space-y-1.5 text-xs font-mono" id="b-combat-log">
+                    <div class="text-slate-400 text-center py-4">選擇下方戰鬥技能開始冒險！</div>
+                </div>
+
+                <!-- Bottom: Command Action Buttons -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <button id="btn-battle-tackle" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-black text-xs shadow transition flex flex-col items-center">
+                        <span class="text-sm">💥 猛烈衝撞</span>
+                        <span class="text-[10px] text-rose-200 mt-0.5">普通攻擊 · 機率暴擊</span>
+                    </button>
+                    <button id="btn-battle-roll" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xs shadow transition flex flex-col items-center">
+                        <span class="text-sm" id="b-btn-roll-label">🌀 肉彈戰車旋轉</span>
+                        <span class="text-[10px] text-slate-900 mt-0.5">2.2倍重擊 · 35%暈眩</span>
+                    </button>
+                    <button id="btn-battle-guard" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-xs shadow transition flex flex-col items-center">
+                        <span class="text-sm">🛡️ 鐵壁格擋</span>
+                        <span class="text-[10px] text-sky-200 mt-0.5">減免70%傷害 · 絕地反擊</span>
+                    </button>
+                    <button id="btn-battle-heal" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs shadow transition flex flex-col items-center">
+                        <span class="text-sm" id="b-btn-heal-label">🍖 鮮食急救 (剩3次)</span>
+                        <span class="text-[10px] text-emerald-200 mt-0.5">消耗鮮食或15金幣 · 回復35%</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Lucky Gacha Result Popup (盲盒抽獎結果) -->
+    <div id="modal-gacha-result" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="hud-glass w-full max-w-lg rounded-3xl p-6 border border-purple-500/50 shadow-2xl flex flex-col items-center text-center space-y-4">
+            <div class="text-4xl animate-bounce">🎁</div>
+            <h3 class="text-xl font-black text-white" id="gacha-result-title">恭喜開啟神秘盲盒！</h3>
+            <p class="text-xs text-purple-200" id="gacha-result-subtitle">已獲得以下豐厚獎勵：</p>
+            <div id="gacha-result-items" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-2.5 py-2 max-h-64 overflow-y-auto"></div>
+            <button id="btn-close-gacha-result" class="px-6 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-black text-xs shadow-lg transition">
+                收下獎勵
+            </button>
+        </div>
     </div>
 
     <script>
@@ -852,6 +1025,36 @@
                 sky: 0xfef9c3, groundOuter: 0xd6d3d1, turfLight: 0xfef3c7, turfDeep: 0xfde68a, dirt: 0xf59e0b,
                 hill1: 0xe7e5e4, hill2: 0xd6d3d1, leaf1: 0xf59e0b, leaf2: 0xfacc15, sunColor: 0xfffbeb, sunInt: 0.98
             }
+        ];
+
+        const WEAPONS_CATALOG = [
+            { id: 'wood_sword',    name: '鍛造木劍',           price: 180,  atkBonus: 18,  critBonus: 0,  desc: '結實堅固的橡木短劍，小豬勇士的啟蒙之刃' },
+            { id: 'boxing_gloves', name: '熱血冠軍拳套',       price: 420,  atkBonus: 38,  critBonus: 8,  desc: '火紅皮革拳擊手套，出拳自帶破空聲與暴擊加成' },
+            { id: 'knight_lance',  name: '皇家騎士長槍',       price: 950,  atkBonus: 85,  critBonus: 12, desc: '純銀精鑄騎士長矛，配備黃金護手碗' },
+            { id: 'excalibur',     name: '誓約勝利王者之劍',   price: 2200, atkBonus: 190, critBonus: 25, desc: '金光閃耀的神聖王劍，劍刃散發神聖蔚藍輝光' }
+        ];
+
+        const SHIELDS_CATALOG = [
+            { id: 'linen_cape',    name: '冒險者亞麻斗篷',     price: 150,  defBonus: 12,  hpBonus: 60,  desc: '輕盈防風的旅行斗篷，減免森林魔物抓傷' },
+            { id: 'oak_buckler',   name: '橡木精鋼小圓盾',     price: 380,  defBonus: 30,  hpBonus: 150, desc: '沉重橡木鑲嵌鋼釘圓盾，可穩健格擋衝擊' },
+            { id: 'mithril_armor', name: '秘銀重裝騎士護甲',   price: 880,  defBonus: 70,  hpBonus: 350, desc: '精靈秘銀精工鍛造，極大幅度強化小豬體魄硬度' },
+            { id: 'holy_aegis',    name: '聖光庇護神之巨盾',   price: 1980, defBonus: 150, hpBonus: 800, desc: '銘刻守護盧恩符文的聖白巨盾，具有堅不可摧神力' }
+        ];
+
+        const ESTATE_CATALOG = [
+            { id: 'auto_feeder',      name: '自動補料投餵機',   price: 1200, passiveCoin: 0,  desc: '當小豬飽足低於25%時自動餵食零食，飽足上限提升至120%' },
+            { id: 'hydro_spa',        name: '皇家泥漿水療溫泉', price: 1800, passiveCoin: 4,  desc: '清潔與心情衰減速度減少50%，每秒自動產出 +4 金幣' },
+            { id: 'fortune_windmill', name: '幸運黃金風車',     price: 3500, passiveCoin: 8,  desc: '撫摸與戰鬥收益獲得 1.5x 加乘，每秒自動產出 +8 金幣' },
+            { id: 'combat_dummy',     name: '戰鬥修煉假人',     price: 4800, passiveCoin: 0,  desc: '小豬專屬特訓假人，永久使戰鬥攻擊 +40、防禦 +25' },
+            { id: 'golden_statue',    name: '至尊純金小豬雕像', price: 10000, passiveCoin: 20, desc: '象徵至高財富的紀念碑，每秒產出 +20 金幣並解鎖小豬環繞金光' }
+        ];
+
+        const BATTLE_STAGES = [
+            { id: 1, name: '蘿蔔森林',     boss: '蹦跳野兔長老',     hp: 160,  atk: 14, def: 4,  reward: 70,   icon: '🥕', desc: '守護巨大胡蘿蔔的野兔族長，敏捷迅速' },
+            { id: 2, name: '泥沼礦坑',     boss: '暴躁地鼠礦工',     hp: 350,  atk: 28, def: 10, reward: 160,  icon: '⛏️', desc: '霸佔地底金礦的暴躁地鼠，揮動十字鎬威力兇猛' },
+            { id: 3, name: '荊棘平原',     boss: '刺蝟狂戰士',       hp: 720,  atk: 48, def: 22, reward: 350,  icon: '🦔', desc: '鋼針般尖刺的狂暴刺蝟，防守極為棘手' },
+            { id: 4, name: '熔岩南瓜谷',   boss: '熔岩南瓜巨靈',     hp: 1350, atk: 82, def: 38, reward: 750,  icon: '🎃', desc: '吸收地底熔岩而甦醒的魔像巨靈，每次震撼大地' },
+            { id: 5, name: '黑暗松露神殿', boss: '暗黑魔龍神豬',     hp: 2600, atk: 135, def: 55, reward: 1800, icon: '🐉', desc: '盤踞於松露世界之巔的終極霸主，討伐贏取海量金幣！' }
         ];
 
         const TIER_INFO = {
@@ -972,7 +1175,13 @@
             activeBuff: BUFF_TYPES[0],
             buffTimer: 0,
             troughMask: 0,
-            unlockedRecipes: {}
+            unlockedRecipes: {},
+            equippedWeapon: null,
+            equippedShield: null,
+            ownedEquip: {},
+            estateLevels: {},
+            battleStagesUnlocked: 1,
+            battleWins: 0
         };
 
         function getTouchCoinGain() {
@@ -982,6 +1191,9 @@
                     base += (gameState.upgradeLevels[up.id] || 0) * up.bonus;
                 }
             });
+            if (gameState.estateLevels && gameState.estateLevels.fortune_windmill) {
+                base = Math.round(base * 1.5);
+            }
             return base;
         }
 
@@ -995,6 +1207,11 @@
             TOYS_CATALOG.forEach(toy => {
                 if (gameState.ownedToys[toy.id]) {
                     total += toy.passiveCoin;
+                }
+            });
+            ESTATE_CATALOG.forEach(est => {
+                if (gameState.estateLevels && gameState.estateLevels[est.id]) {
+                    total += est.passiveCoin || 0;
                 }
             });
             return total;
@@ -1029,6 +1246,12 @@
                     if (data.unlockedRecipes && typeof data.unlockedRecipes === 'object') {
                         gameState.unlockedRecipes = data.unlockedRecipes;
                     }
+                    if (typeof data.equippedWeapon === 'string' || data.equippedWeapon === null) gameState.equippedWeapon = data.equippedWeapon;
+                    if (typeof data.equippedShield === 'string' || data.equippedShield === null) gameState.equippedShield = data.equippedShield;
+                    if (data.ownedEquip && typeof data.ownedEquip === 'object') Object.assign(gameState.ownedEquip, data.ownedEquip);
+                    if (data.estateLevels && typeof data.estateLevels === 'object') Object.assign(gameState.estateLevels, data.estateLevels);
+                    if (typeof data.battleStagesUnlocked === 'number') gameState.battleStagesUnlocked = Math.max(1, Math.min(5, data.battleStagesUnlocked));
+                    if (typeof data.battleWins === 'number') gameState.battleWins = data.battleWins;
                 }
             } catch (e) {
                 console.warn('無法載入存檔:', e);
@@ -1054,7 +1277,13 @@
                     ownedToys: gameState.ownedToys,
                     activeToys: gameState.activeToys,
                     upgradeLevels: gameState.upgradeLevels,
-                    unlockedRecipes: gameState.unlockedRecipes
+                    unlockedRecipes: gameState.unlockedRecipes,
+                    equippedWeapon: gameState.equippedWeapon,
+                    equippedShield: gameState.equippedShield,
+                    ownedEquip: gameState.ownedEquip,
+                    estateLevels: gameState.estateLevels,
+                    battleStagesUnlocked: gameState.battleStagesUnlocked,
+                    battleWins: gameState.battleWins
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
             } catch (e) {
@@ -1303,6 +1532,79 @@
                     gain.connect(this.ctx.destination);
                     osc.start(now + idx * 0.065);
                     osc.stop(now + idx * 0.065 + 0.34);
+                });
+            }
+            playSlash() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(140, now + 0.16);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.18, now + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.19);
+            }
+            playHit() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(45, now + 0.14);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.24, now + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.17);
+            }
+            playShieldBlock() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(560, now);
+                osc.frequency.exponentialRampToValueAtTime(180, now + 0.28);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.22, now + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.31);
+            }
+            playVictoryFanfare() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [440, 554.37, 659.25, 880].forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.11);
+                    gain.gain.setValueAtTime(0.001, now + idx * 0.11);
+                    gain.gain.linearRampToValueAtTime(0.2, now + idx * 0.11 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.11 + 0.32);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.11);
+                    osc.stop(now + idx * 0.11 + 0.34);
                 });
             }
         }
@@ -2590,6 +2892,7 @@
                 this.buildExpressiveFeaturesAndLimbs();
                 this.build3DNameplate();
                 this.setHat(gameState.currentHat);
+                this.buildCombatEquipMounts();
             }
 
             buildSculptedSoftBodyMesh() {
@@ -3135,6 +3438,183 @@
                 }
             }
 
+            buildCombatEquipMounts() {
+                this.weaponMount = new THREE.Group();
+                this.weaponMount.position.set(0.88, 0.95, 0.45);
+                this.visualGroup.add(this.weaponMount);
+
+                this.shieldMount = new THREE.Group();
+                this.shieldMount.position.set(-0.88, 0.95, 0.45);
+                this.visualGroup.add(this.shieldMount);
+
+                this.weaponSwingTimer = 0;
+                this.defendBarrierTimer = 0;
+
+                this.setWeapon(gameState.equippedWeapon);
+                this.setShield(gameState.equippedShield);
+            }
+
+            setWeapon(weaponId) {
+                while (this.weaponMount.children.length > 0) {
+                    this.weaponMount.remove(this.weaponMount.children[0]);
+                }
+                gameState.equippedWeapon = weaponId;
+                if (!weaponId) return;
+
+                if (weaponId === 'wood_sword') {
+                    // Wooden Training Sword
+                    const woodMat = createOrganicSurfaceMaterial(0x92400e, 0.85);
+                    const handleMat = createMatteMaterial(0x78350f, 0.9);
+                    const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.035, 0.22, 10), handleMat);
+                    hilt.position.y = -0.11;
+                    this.weaponMount.add(hilt);
+                    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.045, 0.06), woodMat);
+                    guard.position.y = 0.01;
+                    this.weaponMount.add(guard);
+                    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.65, 0.025), woodMat);
+                    blade.position.y = 0.34;
+                    this.weaponMount.add(blade);
+                    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.12, 4), woodMat);
+                    tip.position.y = 0.72;
+                    tip.rotation.y = Math.PI / 4;
+                    this.weaponMount.add(tip);
+                } else if (weaponId === 'boxing_gloves') {
+                    // Vibrant Red Boxing Glove
+                    const redGloveMat = new THREE.MeshPhysicalMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.05, clearcoat: 0.6 });
+                    const strapMat = createMatteMaterial(0xffffff, 0.7);
+                    const gloveBody = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 14), redGloveMat);
+                    gloveBody.scale.set(1.1, 1.25, 1.35);
+                    gloveBody.position.set(0, 0.15, 0.1);
+                    this.weaponMount.add(gloveBody);
+                    const thumb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), redGloveMat);
+                    thumb.position.set(-0.16, 0.12, 0.18);
+                    this.weaponMount.add(thumb);
+                    const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.12, 16), strapMat);
+                    wrist.position.set(0, -0.06, 0.05);
+                    this.weaponMount.add(wrist);
+                } else if (weaponId === 'knight_lance') {
+                    // Royal Knight Jousting Lance
+                    const steelMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.85 });
+                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.7 });
+                    const lanceBody = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.11, 1.35, 16), steelMat);
+                    lanceBody.position.y = 0.55;
+                    this.weaponMount.add(lanceBody);
+                    const guardBowl = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.18, 16, 1, true), goldMat);
+                    guardBowl.rotation.x = Math.PI;
+                    guardBowl.position.y = -0.08;
+                    this.weaponMount.add(guardBowl);
+                    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3, 12), goldMat);
+                    grip.position.y = -0.22;
+                    this.weaponMount.add(grip);
+                } else if (weaponId === 'excalibur') {
+                    // Holy Excalibur Sword with glowing blade & golden winged guard
+                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.8 });
+                    const holyBladeMat = new THREE.MeshPhysicalMaterial({
+                        color: 0x38bdf8,
+                        emissive: 0x0284c7,
+                        emissiveIntensity: 0.75,
+                        roughness: 0.15,
+                        metalness: 0.3,
+                        clearcoat: 1.0
+                    });
+                    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.06, 0.08), goldMat);
+                    guard.position.y = 0.02;
+                    this.weaponMount.add(guard);
+                    const pommel = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), goldMat);
+                    pommel.position.y = -0.26;
+                    this.weaponMount.add(pommel);
+                    const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.24, 12), createMatteMaterial(0x0f172a, 0.9));
+                    hilt.position.y = -0.12;
+                    this.weaponMount.add(hilt);
+                    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.82, 0.03), holyBladeMat);
+                    blade.position.y = 0.44;
+                    this.weaponMount.add(blade);
+                    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.18, 4), holyBladeMat);
+                    tip.position.y = 0.92;
+                    tip.rotation.y = Math.PI / 4;
+                    this.weaponMount.add(tip);
+                }
+                this.weaponMount.rotation.set(0.15, 0, -0.15);
+            }
+
+            setShield(shieldId) {
+                while (this.shieldMount.children.length > 0) {
+                    this.shieldMount.remove(this.shieldMount.children[0]);
+                }
+                gameState.equippedShield = shieldId;
+                if (!shieldId) return;
+
+                if (shieldId === 'linen_cape') {
+                    // Flowing Cape on shoulder
+                    const capeMat = createOrganicSurfaceMaterial(0x3b82f6, 0.8);
+                    const cape = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.45, 0.65, 12, 1, true, 0, Math.PI), capeMat);
+                    cape.rotation.y = -Math.PI / 2;
+                    cape.rotation.z = -0.2;
+                    cape.position.set(-0.05, -0.15, -0.1);
+                    this.shieldMount.add(cape);
+                } else if (shieldId === 'oak_buckler') {
+                    // Circular Wood & Iron Buckler
+                    const woodMat = createOrganicSurfaceMaterial(0x78350f, 0.85);
+                    const ironMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.35, metalness: 0.7 });
+                    const shieldBody = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.045, 24), woodMat);
+                    shieldBody.rotation.x = Math.PI / 2;
+                    shieldBody.rotation.y = 0.3;
+                    this.shieldMount.add(shieldBody);
+                    const boss = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), ironMat);
+                    boss.position.set(0, 0, 0.035);
+                    shieldBody.add(boss);
+                    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.025, 10, 24), ironMat);
+                    rim.position.z = 0.02;
+                    shieldBody.add(rim);
+                } else if (shieldId === 'mithril_armor') {
+                    // Mithril Armor Plate & Pauldron
+                    const mithrilMat = new THREE.MeshStandardMaterial({ color: 0x93c5fd, roughness: 0.2, metalness: 0.85 });
+                    const pauldron = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 14, 0, Math.PI * 2, 0, Math.PI / 2), mithrilMat);
+                    pauldron.scale.set(1.1, 0.9, 1.25);
+                    pauldron.position.set(-0.05, 0.1, 0);
+                    this.shieldMount.add(pauldron);
+                    const plate = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.48, 0.06), mithrilMat);
+                    plate.rotation.y = -0.4;
+                    plate.position.set(0, -0.18, 0.08);
+                    this.shieldMount.add(plate);
+                } else if (shieldId === 'holy_aegis') {
+                    // Holy Golden Aegis
+                    const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.85 });
+                    const holyMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.1, clearcoat: 0.9 });
+                    const kiteGeo = deformBufferGeometry(new THREE.BoxGeometry(0.46, 0.75, 0.05), (v) => {
+                        if (v.y < 0) v.x *= Math.max(0.2, 1.0 + v.y * 1.5);
+                    });
+                    const aegis = new THREE.Mesh(kiteGeo, holyMat);
+                    aegis.rotation.y = 0.4;
+                    this.shieldMount.add(aegis);
+                    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.62, 0.06), goldMat);
+                    crossV.position.z = 0.015;
+                    aegis.add(crossV);
+                    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.08, 0.06), goldMat);
+                    crossH.position.set(0, 0.12, 0.015);
+                    aegis.add(crossH);
+                }
+                this.shieldMount.rotation.set(0.12, 0, 0.15);
+            }
+
+            playAttackAnimation() {
+                this.body.velocity.z = 3.6;
+                this.body.velocity.y = 2.4;
+                this.weaponSwingTimer = 0.38;
+                sfx.playSlash();
+                if (typeof spawn3DParticle !== 'undefined') {
+                    spawn3DParticle('SPARKLE', this.root.position.clone().add(new THREE.Vector3(0.5, 1.2, 1.2)));
+                }
+            }
+
+            playDefendAnimation() {
+                this.defendBarrierTimer = 0.45;
+                sfx.playShieldBlock();
+                if (typeof spawn3DParticle !== 'undefined') {
+                    spawn3DParticle('STAR', this.root.position.clone().add(new THREE.Vector3(-0.4, 1.2, 0.9)));
+                }
+            }
+
             pokeAtWorldPoint(worldPoint, worldNormal, strength = 0.36, tangentVel = null) {
                 const localPt = this.bodyMesh.worldToLocal(worldPoint.clone());
                 const invQuat = this.root.quaternion.clone().invert();
@@ -3487,6 +3967,35 @@
                     const browLift = (this.happyTimer > 0) ? -0.08 : (this.aiState === 'SLEEP' ? 0.06 : 0);
                     this.leftBrow.position.y = 0.175 + browLift;
                     this.rightBrow.position.y = 0.175 + browLift;
+                }
+
+                // Weapon & Shield Dynamic Motion
+                if (this.weaponMount) {
+                    if (this.weaponSwingTimer > 0) {
+                        this.weaponSwingTimer = Math.max(0, this.weaponSwingTimer - dt);
+                        const progress = (0.38 - this.weaponSwingTimer) / 0.38;
+                        this.weaponMount.rotation.x = Math.sin(progress * Math.PI) * 1.7 + 0.15;
+                        this.weaponMount.rotation.z = -0.15 - Math.sin(progress * Math.PI) * 0.45;
+                    } else {
+                        const idleWeaponSway = Math.sin(elapsed * 2.8) * 0.06;
+                        this.weaponMount.rotation.set(0.15 + idleWeaponSway, 0, -0.15);
+                    }
+                }
+                if (this.shieldMount) {
+                    if (this.defendBarrierTimer > 0) {
+                        this.defendBarrierTimer = Math.max(0, this.defendBarrierTimer - dt);
+                        this.shieldMount.rotation.x = 0.55;
+                        this.shieldMount.position.z = 0.65;
+                    } else {
+                        const idleShieldSway = Math.cos(elapsed * 2.8) * 0.05;
+                        this.shieldMount.rotation.set(0.12 + idleShieldSway, 0, 0.15);
+                        this.shieldMount.position.z = 0.45;
+                    }
+                }
+
+                // Golden Monument Radiant Aura Effect
+                if (gameState.estateLevels && gameState.estateLevels.golden_statue && Math.random() < dt * 2.5) {
+                    spawn3DParticle('SPARKLE', this.root.position.clone().add(new THREE.Vector3((Math.random() - 0.5) * 1.8, Math.random() * 2.0, (Math.random() - 0.5) * 1.8)));
                 }
 
                 this.updateSoftBodyVertices(dt, elapsed);
@@ -4330,8 +4839,688 @@
                     });
                     container.appendChild(card);
                 });
+            } else if (currentShopTab === 'armory') {
+                const wHeader = document.createElement('div');
+                wHeader.className = 'col-span-full py-1 border-b border-slate-700/80 flex items-center justify-between text-xs';
+                wHeader.innerHTML = `<span class="font-black text-rose-300">⚔️ 戰鬥武器（提供攻擊力 ATK 與暴擊率 CRIT）</span>`;
+                container.appendChild(wHeader);
+
+                WEAPONS_CATALOG.forEach(w => {
+                    const owned = !!gameState.ownedEquip[w.id];
+                    const equipped = gameState.equippedWeapon === w.id;
+                    const canAfford = gameState.coins >= w.price;
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-2xl border flex flex-col justify-between transition ${
+                        equipped ? 'bg-slate-800/90 border-rose-400/80 shadow-[0_0_12px_rgba(244,63,94,0.25)]' : (owned ? 'bg-slate-800/70 border-slate-700' : 'bg-slate-900/80 border-slate-700')
+                    }`;
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-sm text-white">${w.name}</span>
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${equipped ? 'bg-rose-500/20 text-rose-300' : (owned ? 'bg-slate-700 text-slate-300' : 'bg-amber-500/20 text-amber-300')}">
+                                    ${equipped ? '裝備中' : (owned ? '已解鎖' : `${w.price} 金幣`)}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1">${w.desc}</p>
+                            <div class="mt-2 text-xs font-bold text-rose-400">
+                                攻擊力 +${w.atkBonus} ${w.critBonus ? `· 暴擊率 +${w.critBonus}%` : ''}
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-700/70 flex items-center justify-end">
+                            <button class="px-3 py-1 rounded-xl text-xs font-black transition ${
+                                equipped ? 'bg-slate-700 text-slate-300' : (owned ? 'bg-rose-500 text-white hover:bg-rose-400' : (canAfford ? 'bg-amber-400 text-slate-950 hover:bg-amber-300' : 'bg-slate-800 text-slate-500'))
+                            }">
+                                ${equipped ? '卸下武器' : (owned ? '裝備此武器' : '購買武器')}
+                            </button>
+                        </div>
+                    `;
+                    card.querySelector('button').addEventListener('click', () => {
+                        if (equipped) {
+                            gameState.equippedWeapon = null;
+                            if (pig) pig.setWeapon(null);
+                            sfx.playSoftTouch(400);
+                        } else if (owned) {
+                            gameState.equippedWeapon = w.id;
+                            if (pig) pig.setWeapon(w.id);
+                            sfx.playSlash();
+                            if (typeof MultiplayerSync !== 'undefined') {
+                                MultiplayerSync.recordAction('EQUIP_CHANGE', 0, { weapon: w.id });
+                            }
+                        } else if (canAfford) {
+                            gameState.coins -= w.price;
+                            gameState.ownedEquip[w.id] = true;
+                            gameState.equippedWeapon = w.id;
+                            if (pig) pig.setWeapon(w.id);
+                            sfx.playChime();
+                            if (typeof MultiplayerSync !== 'undefined') {
+                                MultiplayerSync.recordAction('EQUIP_CHANGE', -w.price, {
+                                    owned_equip: gameState.ownedEquip,
+                                    weapon: w.id,
+                                    item_name: w.name
+                                });
+                            }
+                        }
+                        saveGameState();
+                        renderShopModalContent();
+                    });
+                    container.appendChild(card);
+                });
+
+                const sHeader = document.createElement('div');
+                sHeader.className = 'col-span-full py-1 mt-2 border-b border-slate-700/80 flex items-center justify-between text-xs';
+                sHeader.innerHTML = `<span class="font-black text-sky-300">🛡️ 守護防具（提供防禦力 DEF 與生命上限 HP）</span>`;
+                container.appendChild(sHeader);
+
+                SHIELDS_CATALOG.forEach(s => {
+                    const owned = !!gameState.ownedEquip[s.id];
+                    const equipped = gameState.equippedShield === s.id;
+                    const canAfford = gameState.coins >= s.price;
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-2xl border flex flex-col justify-between transition ${
+                        equipped ? 'bg-slate-800/90 border-sky-400/80 shadow-[0_0_12px_rgba(56,189,248,0.25)]' : (owned ? 'bg-slate-800/70 border-slate-700' : 'bg-slate-900/80 border-slate-700')
+                    }`;
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-sm text-white">${s.name}</span>
+                                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${equipped ? 'bg-sky-500/20 text-sky-300' : (owned ? 'bg-slate-700 text-slate-300' : 'bg-amber-500/20 text-amber-300')}">
+                                    ${equipped ? '裝備中' : (owned ? '已解鎖' : `${s.price} 金幣`)}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1">${s.desc}</p>
+                            <div class="mt-2 text-xs font-bold text-sky-400">
+                                防禦力 +${s.defBonus} · 生命值 +${s.hpBonus}
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-2 border-t border-slate-700/70 flex items-center justify-end">
+                            <button class="px-3 py-1 rounded-xl text-xs font-black transition ${
+                                equipped ? 'bg-slate-700 text-slate-300' : (owned ? 'bg-sky-500 text-white hover:bg-sky-400' : (canAfford ? 'bg-amber-400 text-slate-950 hover:bg-amber-300' : 'bg-slate-800 text-slate-500'))
+                            }">
+                                ${equipped ? '卸下護甲' : (owned ? '裝備此護甲' : '購買防具')}
+                            </button>
+                        </div>
+                    `;
+                    card.querySelector('button').addEventListener('click', () => {
+                        if (equipped) {
+                            gameState.equippedShield = null;
+                            if (pig) pig.setShield(null);
+                            sfx.playSoftTouch(400);
+                        } else if (owned) {
+                            gameState.equippedShield = s.id;
+                            if (pig) pig.setShield(s.id);
+                            sfx.playShieldBlock();
+                            if (typeof MultiplayerSync !== 'undefined') {
+                                MultiplayerSync.recordAction('EQUIP_CHANGE', 0, { shield: s.id });
+                            }
+                        } else if (canAfford) {
+                            gameState.coins -= s.price;
+                            gameState.ownedEquip[s.id] = true;
+                            gameState.equippedShield = s.id;
+                            if (pig) pig.setShield(s.id);
+                            sfx.playChime();
+                            if (typeof MultiplayerSync !== 'undefined') {
+                                MultiplayerSync.recordAction('EQUIP_CHANGE', -s.price, {
+                                    owned_equip: gameState.ownedEquip,
+                                    shield: s.id,
+                                    item_name: s.name
+                                });
+                            }
+                        }
+                        saveGameState();
+                        renderShopModalContent();
+                    });
+                    container.appendChild(card);
+                });
+            } else if (currentShopTab === 'estate') {
+                ESTATE_CATALOG.forEach(est => {
+                    const owned = !!(gameState.estateLevels && gameState.estateLevels[est.id]);
+                    const canAfford = gameState.coins >= est.price;
+                    const card = document.createElement('div');
+                    card.className = `p-4 rounded-2xl border flex flex-col justify-between transition ${
+                        owned ? 'bg-slate-800/90 border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.2)]' : 'bg-slate-900/80 border-slate-700'
+                    }`;
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="font-black text-sm text-white">${est.name}</span>
+                                <span class="text-xs font-bold px-2 py-0.5 rounded-full ${owned ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
+                                    ${owned ? '已建設' : `${est.price} 金幣`}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-300 mt-1.5">${est.desc}</p>
+                            ${est.passiveCoin ? `<div class="mt-2 text-xs font-semibold text-emerald-300">固定掛機收益 +${est.passiveCoin} 金幣/秒</div>` : ''}
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-700/70 flex items-center justify-end">
+                            <button class="px-4 py-1.5 rounded-xl text-xs font-black transition ${
+                                owned ? 'bg-slate-700 text-slate-300' : (canAfford ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 hover:brightness-110' : 'bg-slate-800 text-slate-500')
+                            }">
+                                ${owned ? '永久運作中' : '投資建造'}
+                            </button>
+                        </div>
+                    `;
+                    card.querySelector('button').addEventListener('click', () => {
+                        if (!owned && canAfford) {
+                            gameState.coins -= est.price;
+                            if (!gameState.estateLevels) gameState.estateLevels = {};
+                            gameState.estateLevels[est.id] = true;
+                            sfx.playChime();
+                            if (pig) spawnFloatingText(`建造完成【${est.name}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#fbbf24');
+                            if (typeof MultiplayerSync !== 'undefined') {
+                                MultiplayerSync.recordAction('BUY_ESTATE', -est.price, {
+                                    estate_levels: gameState.estateLevels,
+                                    name: est.name
+                                });
+                            }
+                            saveGameState();
+                            renderShopModalContent();
+                        }
+                    });
+                    container.appendChild(card);
+                });
+            } else if (currentShopTab === 'gacha') {
+                const banner = document.createElement('div');
+                banner.className = 'col-span-full p-5 rounded-2xl bg-gradient-to-r from-purple-900/60 via-slate-900/80 to-pink-900/60 border border-purple-500/40 text-center space-y-3';
+                banner.innerHTML = `
+                    <div class="text-4xl animate-bounce">🎁</div>
+                    <h3 class="text-lg font-black text-white">皇家幸運神秘盲盒 (Royal Lucky Mystery Chest)</h3>
+                    <p class="text-xs text-purple-200 max-w-xl mx-auto leading-relaxed">
+                        開啟神秘盲盒有機會獲得最高 <span class="text-amber-300 font-black">2,000 金幣大獎</span>、頂級王者之劍、聖光神之盾、極品食材大禮包！
+                    </p>
+                    <div class="flex items-center justify-center gap-3 pt-2">
+                        <button id="btn-gacha-1" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-black text-xs shadow-lg transition flex items-center gap-1.5">
+                            <span>🎁 單抽盲盒 (80 金幣)</span>
+                        </button>
+                        <button id="btn-gacha-5" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black text-xs shadow-lg transition flex items-center gap-1.5">
+                            <span>🌟 五連抽 (360 金幣 · 省40幣)</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(banner);
+
+                banner.querySelector('#btn-gacha-1').addEventListener('click', () => triggerGachaPull(1));
+                banner.querySelector('#btn-gacha-5').addEventListener('click', () => triggerGachaPull(5));
+
+                const poolDesc = document.createElement('div');
+                poolDesc.className = 'col-span-full p-4 rounded-2xl bg-slate-900/70 border border-slate-700/80 text-xs space-y-2';
+                poolDesc.innerHTML = `
+                    <div class="font-black text-purple-300 flex items-center gap-1.5">
+                        <span>📜 幸運盲盒獎勵機率預覽</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-slate-300">
+                        <div class="p-2 rounded-xl bg-slate-950/60 border border-amber-400/30">
+                            <span class="font-bold text-amber-300">👑 傳奇特獎 (4%)</span>
+                            <div class="text-slate-400 mt-1">2000 金幣 / 王者之劍 / 聖光巨盾</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-950/60 border border-rose-400/30">
+                            <span class="font-bold text-rose-300">⚔️ 稀有裝備 (12%)</span>
+                            <div class="text-slate-400 mt-1">騎士長槍 / 秘銀甲 / 500 金幣</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-950/60 border border-sky-400/30">
+                            <span class="font-bold text-sky-300">💎 精品物資 (34%)</span>
+                            <div class="text-slate-400 mt-1">拳擊手套 / 橡木盾 / 200 金幣</div>
+                        </div>
+                        <div class="p-2 rounded-xl bg-slate-950/60 border border-emerald-400/30">
+                            <span class="font-bold text-emerald-300">🍎 豐收糧倉 (50%)</span>
+                            <div class="text-slate-400 mt-1">黑松露等高級食材 x5 / 100 金幣</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(poolDesc);
             }
         }
+
+        function triggerGachaPull(count) {
+            const cost = count === 1 ? 80 : 360;
+            if (gameState.coins < cost) {
+                spawnFloatingText('金幣不足，無法抽取盲盒！', pig ? pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)) : new THREE.Vector3(0, 2, 0), '#f43f5e');
+                return;
+            }
+            gameState.coins -= cost;
+            sfx.playChime();
+
+            const wonItems = [];
+            for (let i = 0; i < count; i++) {
+                const roll = Math.random() * 100;
+                if (roll < 4) {
+                    const sub = Math.random();
+                    if (sub < 0.4) {
+                        gameState.coins += 2000;
+                        wonItems.push({ name: '💰 2,000 金幣大紅包！', type: 'COINS', rarity: 'legendary' });
+                    } else if (sub < 0.7) {
+                        gameState.ownedEquip['excalibur'] = true;
+                        gameState.equippedWeapon = 'excalibur';
+                        if (pig) pig.setWeapon('excalibur');
+                        wonItems.push({ name: '⚔️ 誓約勝利王者之劍！', type: 'EQUIP', rarity: 'legendary' });
+                    } else {
+                        gameState.ownedEquip['holy_aegis'] = true;
+                        gameState.equippedShield = 'holy_aegis';
+                        if (pig) pig.setShield('holy_aegis');
+                        wonItems.push({ name: '🛡️ 聖光庇護神之巨盾！', type: 'EQUIP', rarity: 'legendary' });
+                    }
+                } else if (roll < 16) {
+                    const sub = Math.random();
+                    if (sub < 0.5) {
+                        gameState.coins += 500;
+                        wonItems.push({ name: '💰 500 金幣禮包', type: 'COINS', rarity: 'rare' });
+                    } else {
+                        gameState.ownedEquip['knight_lance'] = true;
+                        if (!gameState.equippedWeapon) { gameState.equippedWeapon = 'knight_lance'; if (pig) pig.setWeapon('knight_lance'); }
+                        wonItems.push({ name: '⚔️ 皇家騎士長槍', type: 'EQUIP', rarity: 'rare' });
+                    }
+                } else if (roll < 50) {
+                    const sub = Math.random();
+                    if (sub < 0.5) {
+                        gameState.coins += 200;
+                        wonItems.push({ name: '💰 200 金幣', type: 'COINS', rarity: 'good' });
+                    } else {
+                        ['A','B','C','D','E','F','G','H','I','J'].forEach(c => {
+                            gameState.ingStock[c] = (gameState.ingStock[c] || 0) + 3;
+                        });
+                        wonItems.push({ name: '🧺 十全鮮食滿漢補給包 (各+3)', type: 'FOOD', rarity: 'good' });
+                    }
+                } else {
+                    const sub = Math.random();
+                    if (sub < 0.4) {
+                        gameState.coins += 100;
+                        wonItems.push({ name: '💰 100 金幣', type: 'COINS', rarity: 'common' });
+                    } else {
+                        gameState.ingStock['J'] = (gameState.ingStock['J'] || 0) + 5;
+                        wonItems.push({ name: '🍄 頂級黑松露 x5', type: 'FOOD', rarity: 'common' });
+                    }
+                }
+            }
+
+            saveGameState();
+            updateHUD();
+            renderShopModalContent();
+
+            const resModal = document.getElementById('modal-gacha-result');
+            const itemsContainer = document.getElementById('gacha-result-items');
+            itemsContainer.innerHTML = '';
+            wonItems.forEach(item => {
+                const el = document.createElement('div');
+                const borderColor = item.rarity === 'legendary' ? 'border-amber-400 text-amber-300' : (item.rarity === 'rare' ? 'border-rose-400 text-rose-300' : 'border-purple-400 text-purple-200');
+                el.className = `p-2.5 rounded-xl bg-slate-900/90 border ${borderColor} text-xs font-black flex items-center justify-center`;
+                el.textContent = item.name;
+                itemsContainer.appendChild(el);
+            });
+            resModal.classList.remove('hidden');
+            resModal.classList.add('flex');
+
+            if (typeof MultiplayerSync !== 'undefined') {
+                MultiplayerSync.recordAction('GACHA', 0, {
+                    prizeName: wonItems[0].name
+                });
+            }
+        }
+
+        const BattleManager = {
+            currentStage: null,
+            inBattle: false,
+            playerHp: 100,
+            playerMaxHp: 100,
+            enemyHp: 100,
+            enemyMaxHp: 100,
+            playerAtk: 15,
+            playerDef: 5,
+            playerCrit: 5,
+            enemyAtk: 15,
+            enemyDef: 3,
+            isGuarding: false,
+            enemyStunned: false,
+            turn: 'player',
+            rollCooldown: 0,
+            healUsesLeft: 3,
+
+            calcPlayerStats() {
+                let weaponAtk = 0;
+                let weaponCrit = 0;
+                if (gameState.equippedWeapon) {
+                    const w = WEAPONS_CATALOG.find(x => x.id === gameState.equippedWeapon);
+                    if (w) { weaponAtk = w.atkBonus || 0; weaponCrit = w.critBonus || 0; }
+                }
+                let shieldDef = 0;
+                let shieldHp = 0;
+                if (gameState.equippedShield) {
+                    const s = SHIELDS_CATALOG.find(x => x.id === gameState.equippedShield);
+                    if (s) { shieldDef = s.defBonus || 0; shieldHp = s.hpBonus || 0; }
+                }
+                const hasDummy = !!(gameState.estateLevels && gameState.estateLevels.combat_dummy);
+                const dummyAtk = hasDummy ? 40 : 0;
+                const dummyDef = hasDummy ? 25 : 0;
+
+                const baseHp = 120 + Math.round(gameState.weight * 14) + shieldHp;
+                const baseAtk = 18 + Math.round(gameState.intimacyLevel * 8) + weaponAtk + dummyAtk;
+                const baseDef = 6 + Math.round(gameState.weight * 0.9) + shieldDef + dummyDef;
+                const baseCrit = 6 + (gameState.intimacyLevel * 2) + weaponCrit;
+
+                return { maxHp: baseHp, atk: baseAtk, def: baseDef, crit: baseCrit };
+            },
+
+            openModal() {
+                const modal = document.getElementById('modal-battle');
+                if (!modal) return;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('battle-modal-coins').textContent = Math.floor(gameState.coins);
+                this.renderStageSelector();
+                const defaultStage = BATTLE_STAGES[(gameState.battleStagesUnlocked || 1) - 1] || BATTLE_STAGES[0];
+                this.startBattle(defaultStage);
+            },
+
+            closeModal() {
+                const modal = document.getElementById('modal-battle');
+                if (!modal) return;
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                this.inBattle = false;
+            },
+
+            renderStageSelector() {
+                const bar = document.getElementById('battle-stage-selector-bar');
+                if (!bar) return;
+                bar.innerHTML = '';
+                const maxUnlocked = gameState.battleStagesUnlocked || 1;
+                BATTLE_STAGES.forEach(st => {
+                    const unlocked = st.id <= maxUnlocked;
+                    const isCurrent = this.currentStage && this.currentStage.id === st.id;
+                    const btn = document.createElement('button');
+                    btn.className = `px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                        isCurrent
+                            ? 'bg-rose-500 text-white shadow'
+                            : (unlocked ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700' : 'bg-slate-900/60 text-slate-500 border border-slate-800 cursor-not-allowed')
+                    }`;
+                    btn.innerHTML = `<span>${st.icon} 第${st.id}關 · ${st.name}</span> ${!unlocked ? '🔒' : ''}`;
+                    if (unlocked) {
+                        btn.addEventListener('click', () => {
+                            this.startBattle(st);
+                            sfx.playSoftTouch(460);
+                        });
+                    }
+                    bar.appendChild(btn);
+                });
+            },
+
+            startBattle(stage) {
+                this.currentStage = stage;
+                this.inBattle = true;
+                const stats = this.calcPlayerStats();
+                this.playerMaxHp = stats.maxHp;
+                this.playerHp = stats.maxHp;
+                this.playerAtk = stats.atk;
+                this.playerDef = stats.def;
+                this.playerCrit = stats.crit;
+
+                this.enemyMaxHp = stage.hp;
+                this.enemyHp = stage.hp;
+                this.enemyAtk = stage.atk;
+                this.enemyDef = stage.def || 4;
+
+                this.isGuarding = false;
+                this.enemyStunned = false;
+                this.turn = 'player';
+                this.rollCooldown = 0;
+                this.healUsesLeft = 3;
+
+                const log = document.getElementById('b-combat-log');
+                if (log) log.innerHTML = '';
+                this.addLog(`⚔️ 進入【${stage.name}】！野豬勇士遭遇 Boss【${stage.boss}】！`, '#fbbf24');
+                this.updateUI();
+                this.renderStageSelector();
+            },
+
+            updateUI() {
+                document.getElementById('b-player-name').textContent = gameState.pigName;
+                const w = WEAPONS_CATALOG.find(x => x.id === gameState.equippedWeapon);
+                const s = SHIELDS_CATALOG.find(x => x.id === gameState.equippedShield);
+                document.getElementById('b-player-equip-text').textContent = `裝備：${w ? w.name : '無武器'} ｜ ${s ? s.name : '無護甲'}`;
+                document.getElementById('b-player-atk').textContent = this.playerAtk;
+                document.getElementById('b-player-def').textContent = this.playerDef;
+                document.getElementById('b-player-crit').textContent = `${this.playerCrit}%`;
+                document.getElementById('b-player-hp-text').textContent = `${Math.max(0, this.playerHp)} / ${this.playerMaxHp}`;
+                const pHpPct = Math.max(0, Math.min(100, (this.playerHp / this.playerMaxHp) * 100));
+                document.getElementById('b-player-hp-bar').style.width = `${pHpPct}%`;
+
+                if (this.currentStage) {
+                    document.getElementById('b-enemy-name').textContent = this.currentStage.boss;
+                    document.getElementById('b-enemy-icon').textContent = this.currentStage.icon;
+                    document.getElementById('b-enemy-sub').textContent = this.currentStage.desc;
+                    document.getElementById('b-enemy-atk').textContent = this.enemyAtk;
+                    document.getElementById('b-enemy-def').textContent = this.enemyDef;
+                    document.getElementById('b-enemy-reward').textContent = this.currentStage.reward;
+                    document.getElementById('b-enemy-hp-text').textContent = `${Math.max(0, this.enemyHp)} / ${this.enemyMaxHp}`;
+                    const eHpPct = Math.max(0, Math.min(100, (this.enemyHp / this.enemyMaxHp) * 100));
+                    document.getElementById('b-enemy-hp-bar').style.width = `${eHpPct}%`;
+                    document.getElementById('battle-badge-stage').textContent = `第 ${this.currentStage.id} 區`;
+                }
+
+                const isPlayerTurn = this.turn === 'player';
+                const btnTackle = document.getElementById('btn-battle-tackle');
+                const btnRoll = document.getElementById('btn-battle-roll');
+                const btnGuard = document.getElementById('btn-battle-guard');
+                const btnHeal = document.getElementById('btn-battle-heal');
+
+                if (btnTackle) btnTackle.disabled = !isPlayerTurn;
+                if (btnRoll) {
+                    btnRoll.disabled = !isPlayerTurn || this.rollCooldown > 0;
+                    document.getElementById('b-btn-roll-label').textContent = this.rollCooldown > 0 ? `🌀 冷卻中 (${this.rollCooldown}回合)` : '🌀 肉彈戰車旋轉';
+                }
+                if (btnGuard) btnGuard.disabled = !isPlayerTurn;
+                if (btnHeal) {
+                    btnHeal.disabled = !isPlayerTurn || this.healUsesLeft <= 0;
+                    document.getElementById('b-btn-heal-label').textContent = `🍖 鮮食急救 (剩${this.healUsesLeft}次)`;
+                }
+
+                document.getElementById('battle-modal-coins').textContent = Math.floor(gameState.coins);
+            },
+
+            addLog(text, color = '#f8fafc') {
+                const log = document.getElementById('b-combat-log');
+                if (!log) return;
+                const row = document.createElement('div');
+                row.style.color = color;
+                row.textContent = `> ${text}`;
+                log.appendChild(row);
+                log.scrollTop = log.scrollHeight;
+            },
+
+            spawnDamage(targetType, dmg, isCrit = false, isHeal = false) {
+                const card = targetType === 'player' ? document.getElementById('b-player-card') : document.getElementById('b-enemy-card');
+                if (!card) return;
+                const el = document.createElement('div');
+                el.className = 'combat-floating-dmg';
+                el.style.left = '50%';
+                el.style.top = '40%';
+                if (isHeal) {
+                    el.textContent = `+${dmg} HP`;
+                    el.style.color = '#34d399';
+                    el.style.fontSize = '18px';
+                } else if (isCrit) {
+                    el.textContent = `🔥 CRIT -${dmg}!`;
+                    el.style.color = '#fbbf24';
+                    el.style.fontSize = '22px';
+                } else {
+                    el.textContent = `-${dmg}`;
+                    el.style.color = targetType === 'player' ? '#f43f5e' : '#ffffff';
+                    el.style.fontSize = '17px';
+                }
+                card.appendChild(el);
+                setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
+            },
+
+            shakeScreen() {
+                const arena = document.getElementById('battle-arena');
+                if (!arena) return;
+                arena.classList.remove('battle-shake');
+                void arena.offsetWidth;
+                arena.classList.add('battle-shake');
+                setTimeout(() => arena.classList.remove('battle-shake'), 400);
+            },
+
+            playerTackle() {
+                if (this.turn !== 'player') return;
+                this.turn = 'busy';
+                if (pig) pig.playAttackAnimation();
+                this.shakeScreen();
+
+                const isCrit = Math.random() * 100 < this.playerCrit;
+                const mult = isCrit ? 1.85 : (0.9 + Math.random() * 0.3);
+                const rawDmg = Math.max(12, Math.round((this.playerAtk * mult) - (this.enemyDef * 0.4)));
+                this.enemyHp = Math.max(0, this.enemyHp - rawDmg);
+                this.spawnDamage('enemy', rawDmg, isCrit, false);
+                this.addLog(`${gameState.pigName} 使出【猛烈衝撞】，${isCrit ? '🔥 命中要害！' : ''}重創 ${this.currentStage.boss} ${rawDmg} 點傷害！`, isCrit ? '#fbbf24' : '#f472b6');
+
+                this.updateUI();
+                if (this.enemyHp <= 0) {
+                    this.handleVictory();
+                } else {
+                    setTimeout(() => this.startEnemyTurn(), 700);
+                }
+            },
+
+            playerRoll() {
+                if (this.turn !== 'player' || this.rollCooldown > 0) return;
+                this.turn = 'busy';
+                this.rollCooldown = 3;
+                if (pig) pig.playAttackAnimation();
+                this.shakeScreen();
+
+                const isCrit = Math.random() * 100 < this.playerCrit;
+                const mult = (isCrit ? 2.8 : 2.2) * (0.95 + Math.random() * 0.2);
+                const rawDmg = Math.max(25, Math.round((this.playerAtk * mult) - (this.enemyDef * 0.3)));
+                this.enemyHp = Math.max(0, this.enemyHp - rawDmg);
+                this.spawnDamage('enemy', rawDmg, isCrit, false);
+
+                const stunProc = Math.random() < 0.35;
+                if (stunProc) {
+                    this.enemyStunned = true;
+                    this.addLog(`🌀 ${gameState.pigName} 巨大身軀碾壓！${this.currentStage.boss} 陷入暈眩！造成 ${rawDmg} 傷害！`, '#a78bfa');
+                } else {
+                    this.addLog(`🌀 ${gameState.pigName} 肉彈戰車旋轉撞擊！造成 ${rawDmg} 點傷害！`, '#f59e0b');
+                }
+
+                this.updateUI();
+                if (this.enemyHp <= 0) {
+                    this.handleVictory();
+                } else {
+                    setTimeout(() => this.startEnemyTurn(), 700);
+                }
+            },
+
+            playerGuard() {
+                if (this.turn !== 'player') return;
+                this.turn = 'busy';
+                this.isGuarding = true;
+                if (pig) pig.playDefendAnimation();
+                this.addLog(`🛡️ ${gameState.pigName} 架起堅固防護姿態，下回合傷害減免 70% 並蓄力反擊！`, '#38bdf8');
+                this.updateUI();
+                setTimeout(() => this.startEnemyTurn(), 600);
+            },
+
+            playerHeal() {
+                if (this.turn !== 'player' || this.healUsesLeft <= 0) return;
+                this.turn = 'busy';
+                this.healUsesLeft--;
+                const healAmt = Math.round(this.playerMaxHp * 0.38);
+                this.playerHp = Math.min(this.playerMaxHp, this.playerHp + healAmt);
+                sfx.playChime();
+                this.spawnDamage('player', healAmt, false, true);
+                this.addLog(`🍖 ${gameState.pigName} 狼吞虎嚥大吃一口，恢復了 ${healAmt} 點生命值！`, '#34d399');
+                this.updateUI();
+                setTimeout(() => this.startEnemyTurn(), 600);
+            },
+
+            startEnemyTurn() {
+                if (this.enemyHp <= 0) return;
+                this.turn = 'enemy';
+
+                if (this.enemyStunned) {
+                    this.addLog(`💫 ${this.currentStage.boss} 還在暈眩中，無法動彈！`, '#a78bfa');
+                    this.enemyStunned = false;
+                    this.endTurnPassToPlayer();
+                    return;
+                }
+
+                sfx.playHit();
+                this.shakeScreen();
+
+                let dmg = Math.max(6, Math.round((this.enemyAtk * (0.85 + Math.random() * 0.35)) - (this.playerDef * 0.5)));
+                if (this.isGuarding) {
+                    dmg = Math.max(2, Math.round(dmg * 0.3));
+                    const counterDmg = Math.max(10, Math.round(this.playerAtk * 0.6));
+                    this.enemyHp = Math.max(0, this.enemyHp - counterDmg);
+                    this.spawnDamage('enemy', counterDmg, false, false);
+                    this.addLog(`🛡️ 格擋成功！傷害降至 ${dmg} 點，並絕地反彈造成 ${counterDmg} 點傷害！`, '#38bdf8');
+                } else {
+                    this.addLog(`💥 ${this.currentStage.boss} 狂暴反擊，對 ${gameState.pigName} 造成 ${dmg} 點傷害！`, '#f43f5e');
+                }
+
+                this.playerHp = Math.max(0, this.playerHp - dmg);
+                this.spawnDamage('player', dmg, false, false);
+                this.isGuarding = false;
+
+                this.updateUI();
+                if (this.playerHp <= 0) {
+                    this.handleDefeat();
+                } else if (this.enemyHp <= 0) {
+                    this.handleVictory();
+                } else {
+                    this.endTurnPassToPlayer();
+                }
+            },
+
+            endTurnPassToPlayer() {
+                if (this.rollCooldown > 0) this.rollCooldown--;
+                this.turn = 'player';
+                this.updateUI();
+            },
+
+            handleVictory() {
+                this.turn = 'ended';
+                sfx.playVictoryFanfare();
+                const reward = this.currentStage.reward;
+                gameState.coins += reward;
+                gameState.battleWins = (gameState.battleWins || 0) + 1;
+
+                let nextUnlocked = false;
+                if (this.currentStage.id >= (gameState.battleStagesUnlocked || 1) && this.currentStage.id < 5) {
+                    gameState.battleStagesUnlocked = this.currentStage.id + 1;
+                    nextUnlocked = true;
+                }
+
+                this.addLog(`🎉 遠征大捷！成功擊潰 Boss【${this.currentStage.boss}】！獲得 +${reward} 金幣！`, '#34d399');
+                if (nextUnlocked) {
+                    this.addLog(`🔓 恭喜解鎖全新冒險區域【第 ${gameState.battleStagesUnlocked} 區】！`, '#fbbf24');
+                }
+
+                if (pig) {
+                    pig.body.velocity.y = 7.0;
+                    pig.happyTimer = 3.0;
+                    spawn3DParticle('STAR', pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)));
+                    spawnFloatingText(`討伐勝利！+${reward} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 3.0, 0)), '#34d399');
+                }
+
+                if (typeof MultiplayerSync !== 'undefined') {
+                    MultiplayerSync.recordAction('BATTLE_WIN', reward, {
+                        stage_name: this.currentStage.name,
+                        boss: this.currentStage.boss,
+                        unlocked_stages: gameState.battleStagesUnlocked
+                    });
+                }
+
+                saveGameState();
+                updateHUD();
+                this.renderStageSelector();
+            },
+
+            handleDefeat() {
+                this.turn = 'ended';
+                sfx.playSnort();
+                this.addLog(`💀 戰鬥失利！${gameState.pigName} 體力不支，退回牧場休養生息...`, '#94a3b8');
+                this.addLog(`💡 提示：增加小豬體重長血量、提升親密度增加暴擊，並到商店添購武器防具！`, '#38bdf8');
+                this.updateUI();
+            }
+        };
 
         function renderCodexModalList() {
             const statusFilter = document.getElementById('codex-filter-status').value;
@@ -4426,9 +5615,29 @@
             [nameInput, nameInputMob].forEach(inp => {
                 if (!inp) return;
                 inp.addEventListener('input', () => {
-                    gameState.pigName = inp.value.trim() || '粉紅圓圓';
-                    nameInput.value = gameState.pigName;
-                    if (nameInputMob) nameInputMob.value = gameState.pigName;
+                    const rawVal = inp.value;
+                    gameState.pigName = rawVal;
+                    const other = inp === nameInput ? nameInputMob : nameInput;
+                    if (other && document.activeElement !== other) other.value = rawVal;
+                    if (pig) pig.updateNameplate();
+                });
+                inp.addEventListener('change', () => {
+                    let val = inp.value.trim();
+                    if (!val) val = '粉紅圓圓';
+                    gameState.pigName = val;
+                    nameInput.value = val;
+                    if (nameInputMob) nameInputMob.value = val;
+                    if (pig) pig.updateNameplate();
+                    saveGameState();
+                    if (typeof MultiplayerSync !== 'undefined') {
+                        MultiplayerSync.recordAction('RENAME', 0, { name: val });
+                    }
+                });
+                inp.addEventListener('blur', () => {
+                    let val = inp.value.trim();
+                    if (!val) val = '粉紅圓圓';
+                    gameState.pigName = val;
+                    inp.value = val;
                     if (pig) pig.updateNameplate();
                     saveGameState();
                 });
@@ -4449,6 +5658,30 @@
                     saveGameState();
                 });
             });
+
+            // Battle Modal Triggers
+            const btnBattleDesk = document.getElementById('btn-open-battle-desktop');
+            if (btnBattleDesk) btnBattleDesk.addEventListener('click', () => BattleManager.openModal());
+            const btnBattleMob = document.getElementById('btn-open-battle-mobile');
+            if (btnBattleMob) btnBattleMob.addEventListener('click', () => BattleManager.openModal());
+            const btnCloseBattle = document.getElementById('btn-close-battle');
+            if (btnCloseBattle) btnCloseBattle.addEventListener('click', () => BattleManager.closeModal());
+
+            // Battle Skill Buttons
+            document.getElementById('btn-battle-tackle').addEventListener('click', () => BattleManager.playerTackle());
+            document.getElementById('btn-battle-roll').addEventListener('click', () => BattleManager.playerRoll());
+            document.getElementById('btn-battle-guard').addEventListener('click', () => BattleManager.playerGuard());
+            document.getElementById('btn-battle-heal').addEventListener('click', () => BattleManager.playerHeal());
+
+            // Gacha Modal Close
+            const btnCloseGacha = document.getElementById('btn-close-gacha-result');
+            if (btnCloseGacha) {
+                btnCloseGacha.addEventListener('click', () => {
+                    const gModal = document.getElementById('modal-gacha-result');
+                    gModal.classList.add('hidden');
+                    gModal.classList.remove('flex');
+                });
+            }
 
             // Shop Modal Triggers
             document.getElementById('btn-open-shop-desktop').addEventListener('click', () => openShopModal('toys'));
@@ -4471,6 +5704,7 @@
             document.querySelectorAll('#mobile-bottom-nav .mobile-nav-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const tab = btn.dataset.mtab;
+                    if (tab === 'battle') { BattleManager.openModal(); return; }
                     if (tab === 'shop') { openShopModal('toys'); return; }
                     if (tab === 'upgrades') { openShopModal('upgrades'); return; }
                     if (tab === 'biomes') { openShopModal('biomes'); return; }
@@ -4819,6 +6053,34 @@
                                 pig.setHat(action.details.current_hat);
                                 spawnFloatingText(`${action.player_name} 為小豬換上了新裝扮！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#ec4899');
                             }
+                        } else if (action.action_type === 'RENAME') {
+                            if (action.details && action.details.name) {
+                                gameState.pigName = action.details.name;
+                                const nameInp = document.getElementById('pig-name-input');
+                                if (nameInp && document.activeElement !== nameInp) nameInp.value = gameState.pigName;
+                                const mobName = document.getElementById('pig-name-input-mobile');
+                                if (mobName && document.activeElement !== mobName) mobName.value = gameState.pigName;
+                                if (pig) pig.updateNameplate();
+                                spawnFloatingText(`${action.player_name} 將小豬改名為【${action.details.name}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#ec4899');
+                            }
+                        } else if (action.action_type === 'BATTLE_WIN') {
+                            if (pig) {
+                                pig.body.velocity.y = 6.0;
+                                pig.happyTimer = 2.5;
+                                spawn3DParticle('STAR', pig.root.position.clone().add(new THREE.Vector3(0, 2.2, 0)));
+                                spawnFloatingText(`⚔️ ${action.player_name} 討伐了 ${action.details.boss || '魔物'}！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.8, 0)), '#fbbf24');
+                            }
+                            sfx.playVictoryFanfare();
+                        } else if (action.action_type === 'EQUIP_CHANGE') {
+                            if (pig) {
+                                if (action.details.weapon !== undefined) pig.setWeapon(action.details.weapon);
+                                if (action.details.shield !== undefined) pig.setShield(action.details.shield);
+                                spawnFloatingText(`${action.player_name} 更換了戰鬥裝備！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#38bdf8');
+                            }
+                        } else if (action.action_type === 'BUY_ESTATE') {
+                            if (pig) spawnFloatingText(`${action.player_name} 建設了莊園【${action.details.name || ''}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#f59e0b');
+                        } else if (action.action_type === 'GACHA') {
+                            if (pig) spawnFloatingText(`${action.player_name} 開啟了盲盒獲得【${action.details.prizeName || '神秘大獎'}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#a855f7');
                         } else if (action.action_type === 'BUY_TOY') {
                             if (pig) spawnFloatingText(`${action.player_name} 添購了新玩具！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#a855f7');
                         } else if (action.action_type === 'UPGRADE') {
@@ -4852,6 +6114,11 @@
             let coinBadge = '';
             if (action.action_type === 'FEED') desc = `投餵了美味料理`;
             else if (action.action_type === 'TOUCH') desc = `撫摸了小豬`;
+            else if (action.action_type === 'RENAME') desc = `將小豬改名為【${action.details && action.details.name ? action.details.name : '新名字'}】`;
+            else if (action.action_type === 'BATTLE_WIN') desc = `遠征討伐了【${action.details && action.details.boss ? action.details.boss : '森林魔物'}】`;
+            else if (action.action_type === 'EQUIP_CHANGE') desc = `更換了戰鬥裝備【${action.details && action.details.item_name ? action.details.item_name : ''}】`;
+            else if (action.action_type === 'BUY_ESTATE') desc = `投資建造了莊園【${action.details && action.details.name ? action.details.name : ''}】`;
+            else if (action.action_type === 'GACHA') desc = `開啟幸運盲盒獲得【${action.details && action.details.prizeName ? action.details.prizeName : '神秘獎勵'}】`;
             else if (action.action_type === 'BUY_TOY') desc = `購買了玩具`;
             else if (action.action_type === 'BUY_FOOD') desc = `購買了鮮食`;
             else if (action.action_type === 'UPGRADE') desc = `升級了賺錢技能`;
@@ -4893,9 +6160,9 @@
             if (serverPet.name) {
                 gameState.pigName = serverPet.name;
                 const nameInp = document.getElementById('pig-name-input');
-                if (nameInp) nameInp.value = gameState.pigName;
+                if (nameInp && document.activeElement !== nameInp) nameInp.value = gameState.pigName;
                 const mobName = document.getElementById('pig-name-input-mobile');
-                if (mobName) mobName.value = gameState.pigName;
+                if (mobName && document.activeElement !== mobName) mobName.value = gameState.pigName;
                 if (pig) pig.updateNameplate();
             }
             if (typeof serverPet.weight === 'number' || typeof serverPet.weight === 'string') gameState.weight = Number(serverPet.weight);
@@ -4905,6 +6172,18 @@
             if (typeof serverPet.cleanliness === 'number') gameState.cleanliness = Number(serverPet.cleanliness);
             if (typeof serverPet.intimacy === 'number') gameState.intimacy = Number(serverPet.intimacy);
             if (typeof serverPet.intimacy_level === 'number') gameState.intimacyLevel = Number(serverPet.intimacy_level);
+
+            if (serverPet.equipped_weapon !== undefined && serverPet.equipped_weapon !== gameState.equippedWeapon) {
+                gameState.equippedWeapon = serverPet.equipped_weapon;
+                if (pig) pig.setWeapon(gameState.equippedWeapon);
+            }
+            if (serverPet.equipped_shield !== undefined && serverPet.equipped_shield !== gameState.equippedShield) {
+                gameState.equippedShield = serverPet.equipped_shield;
+                if (pig) pig.setShield(gameState.equippedShield);
+            }
+            if (serverPet.owned_equip) gameState.ownedEquip = serverPet.owned_equip;
+            if (serverPet.estate_levels) gameState.estateLevels = serverPet.estate_levels;
+            if (typeof serverPet.unlocked_stages === 'number') gameState.battleStagesUnlocked = serverPet.unlocked_stages;
 
             if (serverPet.current_hat && serverPet.current_hat !== gameState.currentHat) {
                 gameState.currentHat = serverPet.current_hat;
