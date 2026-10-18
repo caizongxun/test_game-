@@ -470,10 +470,16 @@ const IngredientGLBLoader = {
 if (typeof window !== 'undefined') {
     window.INGREDIENT_GLB_MAP = INGREDIENT_GLB_MAP;
     window.IngredientGLBLoader = IngredientGLBLoader;
+    window.CHEEMS_WEAPONS = CHEEMS_WEAPONS;
+    window.CHEEEMS_WEAPONS = CHEEMS_WEAPONS;
+    window.PIXEL_SKILLS = PIXEL_SKILLS;
 }
 if (typeof global !== 'undefined') {
     global.INGREDIENT_GLB_MAP = INGREDIENT_GLB_MAP;
     global.IngredientGLBLoader = IngredientGLBLoader;
+    global.CHEEMS_WEAPONS = CHEEMS_WEAPONS;
+    global.CHEEEMS_WEAPONS = CHEEMS_WEAPONS;
+    global.PIXEL_SKILLS = PIXEL_SKILLS;
 }
 
 

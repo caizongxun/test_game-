@@ -147,6 +147,29 @@
             font-weight: 700;
             box-shadow: 0 0 0 1px rgba(244, 114, 182, 0.5);
         }
+        #desktop-left-panel {
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+        }
+        #desktop-left-panel.panel-collapsed {
+            transform: translateX(calc(-100% - 1.5rem));
+            opacity: 0;
+            pointer-events: none;
+        }
+        #top-app-bar {
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+        }
+        #top-app-bar.nav-collapsed {
+            transform: translateY(calc(-100% - 1.5rem));
+            opacity: 0;
+            pointer-events: none;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
         #bottom-drawer {
             transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
         }
@@ -223,13 +246,105 @@
     <!-- Floating Dynamic Feedback Container -->
     <div id="feedback-layer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
 
-    <!-- Floating Scene Nav Bar -->
-    <nav id="scene-nav-bar" class="fixed top-2.5 left-1/2 -translate-x-1/2 z-30 hud-glass rounded-full px-2.5 py-1 flex items-center gap-1.5 shadow-2xl border border-white/20">
-        <button id="nav-btn-ranch" class="scene-tab-btn active px-3 py-1 rounded-full text-xs font-black transition">🏡 牧場</button>
-        <button id="nav-btn-farm" class="scene-tab-btn px-3 py-1 rounded-full text-xs font-black transition">🌾 莊園</button>
-        <button id="nav-btn-cheems" class="scene-tab-btn px-3 py-1 rounded-full text-xs font-black transition">🐸 紓壓蛙</button>
-        <button id="nav-btn-pixel" class="scene-tab-btn px-3 py-1 rounded-full text-xs font-black transition text-amber-300">⚔️ 像素冒險</button>
-    </nav>
+    <!-- Floating Unified Top App Bar -->
+    <header id="top-app-bar" class="fixed top-2.5 inset-x-2 md:inset-x-3 z-30 hud-glass rounded-2xl px-2.5 py-1.5 flex items-center justify-between gap-2 shadow-2xl border border-white/20">
+        <!-- Left: Scene Switcher Tabs -->
+        <nav id="scene-nav-bar" class="flex items-center gap-1 shrink-0">
+            <button id="nav-btn-ranch" class="scene-tab-btn active px-2.5 py-1 rounded-xl text-xs font-black transition">🏡 牧場</button>
+            <button id="nav-btn-farm" class="scene-tab-btn px-2.5 py-1 rounded-xl text-xs font-black transition">🌾 莊園</button>
+            <button id="nav-btn-cheems" class="scene-tab-btn px-2.5 py-1 rounded-xl text-xs font-black transition">🐸 紓壓蛙</button>
+            <button id="nav-btn-pixel" class="scene-tab-btn px-2.5 py-1 rounded-xl text-xs font-black transition text-amber-300">⚔️ 像素冒險</button>
+        </nav>
+
+        <!-- Right: Actions & Economy (Desktop) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink">
+            <!-- Coin Balance & Passive Income Display -->
+            <div class="px-2.5 py-1 rounded-xl bg-slate-900/90 border border-amber-400/50 flex items-center gap-2 shrink-0">
+                <div class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]"></div>
+                <div>
+                    <div class="text-xs font-black text-amber-300 leading-none">
+                        <span id="coin-balance-desktop">300</span> 金幣
+                    </div>
+                    <div class="text-[9px] text-emerald-300 font-semibold mt-0.5 hidden xl:block">
+                        +<span id="coin-per-touch-desktop">3</span>/觸 · +<span id="coin-per-sec-desktop">0</span>/秒
+                    </div>
+                </div>
+            </div>
+
+            <!-- Open Battle / Expedition -->
+            <button id="btn-open-battle-desktop" class="hidden md:flex px-2.5 py-1 rounded-xl bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 text-white font-black text-xs shadow transition items-center gap-1 shrink-0 animate-pulse">
+                <span>⚔️ 冒險</span>
+            </button>
+
+            <!-- Hidden Farm Desktop Button for Script Compatibility -->
+            <button id="btn-open-farm-desktop" class="hidden" aria-hidden="true"></button>
+
+            <!-- Open Shop & Arsenal -->
+            <button id="btn-open-shop-desktop" class="hidden md:block px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 text-slate-950 font-black text-xs shadow transition shrink-0">
+                🛒 商店
+            </button>
+
+            <!-- Open Upgrades -->
+            <button id="btn-open-upgrades-desktop" class="hidden md:block px-2 py-1 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 border border-emerald-400/50 text-emerald-200 font-bold text-xs transition shrink-0">
+                ✨ 升級
+            </button>
+
+            <!-- Open Biomes -->
+            <button id="btn-open-biomes-desktop" class="hidden md:block px-2 py-1 rounded-xl bg-sky-500/25 hover:bg-sky-500/40 border border-sky-400/50 text-sky-200 font-bold text-xs transition shrink-0">
+                🌄 背景
+            </button>
+
+            <!-- Recipe Codex -->
+            <button id="btn-open-codex" class="hidden md:flex px-2 py-1 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/50 text-pink-200 font-bold text-xs transition items-center gap-1 shrink-0">
+                <span>📖 圖鑑</span>
+                <span id="codex-counter-badge" class="px-1 py-0.5 rounded bg-slate-950/80 text-pink-200 text-[9px] font-bold">0</span>
+            </button>
+
+            <!-- Multiplayer Co-op Hub Button -->
+            <button id="btn-open-coop-desktop" class="hidden md:flex px-2 py-1 rounded-xl bg-teal-500/25 hover:bg-teal-500/40 border border-teal-400/50 text-teal-200 font-bold text-xs transition items-center gap-1 shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" id="desktop-coop-dot"></span>
+                <span>共養</span>
+                <span id="desktop-coop-code-badge" class="px-1.5 py-0.5 rounded bg-slate-900/90 text-amber-300 font-mono text-[9px]">連線中</span>
+            </button>
+
+            <!-- Wearable Hat Selector -->
+            <select id="hat-selector" aria-label="小豬頭飾" class="hidden md:block bg-slate-800 hover:bg-slate-700 text-amber-200 border border-slate-600/80 rounded-xl px-2 py-1 text-xs font-semibold focus:outline-none focus:border-amber-400 transition cursor-pointer shrink-0">
+                <option value="none">頭飾：無</option>
+                <option value="sprout">嫩綠豆苗</option>
+                <option value="chef">主廚帽</option>
+                <option value="straw">田園草帽</option>
+                <option value="crown">純金皇冠</option>
+                <option value="scarf">暖陽紅圍巾</option>
+                <option value="angel">天使光環</option>
+                <option value="glasses">酷炫墨鏡</option>
+                <option value="bell">金鈴鐺</option>
+                <option value="wizard">巫師帽</option>
+            </select>
+
+            <!-- Audio Toggle Button -->
+            <button id="btn-sound-toggle" title="切換音效" class="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600/60 transition shrink-0">
+                <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <svg id="icon-sound-off" class="w-4 h-4 text-rose-400 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            </button>
+
+            <!-- Top Nav Collapse Toggle -->
+            <button id="btn-toggle-top-nav" title="收起頂部功能列" class="px-2 py-1 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600/70 text-slate-300 text-xs font-bold transition shrink-0 flex items-center gap-1">
+                <span>▲ 收起</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Floating Expand Button for Top Bar -->
+    <button id="btn-expand-top-nav" class="hidden fixed top-1 left-1/2 -translate-x-1/2 z-30 px-3 py-1 rounded-b-xl hud-glass border-x border-b border-amber-400/50 text-xs font-black text-amber-200 shadow-xl hover:bg-slate-800 transition flex items-center gap-1">
+        <span>▼ 展開選單</span>
+    </button>
 
     <!-- Dedicated Farmland 3D Scene Overlay -->
     <div id="farm-scene-overlay" class="hidden fixed inset-x-3 top-16 z-20 pointer-events-none flex flex-col justify-between max-w-4xl mx-auto">
@@ -322,14 +437,22 @@
         </div>
     </div>
 
+    <!-- Floating Button to Expand Left Panel -->
+    <button id="btn-expand-left-panel" class="hidden fixed top-16 left-0 z-20 px-2.5 py-1.5 rounded-r-xl hud-glass border-y border-r border-rose-400/50 text-xs font-black text-rose-200 shadow-xl hover:bg-slate-800 transition flex items-center gap-1">
+        <span>🐷 小豬狀態 ▶</span>
+    </button>
+
     <!-- ==================== DESKTOP UI (md and above) ==================== -->
-    <aside id="desktop-left-panel" class="hidden md:block fixed top-3 left-3 z-20 w-84 hud-glass rounded-2xl p-3.5 transition-all">
+    <aside id="desktop-left-panel" class="hidden md:block fixed top-14 left-3 z-20 w-72 sm:w-80 hud-glass rounded-2xl p-3 transition-all shadow-2xl">
         <!-- Multi-Pig Roster Bar -->
-        <div class="mb-2.5 pb-2 border-b border-slate-700/70">
-            <div class="flex items-center justify-between text-[11px] font-bold text-slate-300 mb-1.5">
-                <span>🐷 牧場家族群豬陣容</span>
+        <div class="mb-2 pb-2 border-b border-slate-700/70">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-300 mb-1">
+                <span class="flex items-center gap-1">🐷 <span>小豬家族</span></span>
+                <button id="btn-toggle-left-panel" title="收起狀態面板" class="px-2 py-0.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-600/70 text-[10px] text-slate-300 transition flex items-center gap-0.5">
+                    <span>◀ 收起</span>
+                </button>
             </div>
-            <div id="pig-roster-bar" class="flex items-center gap-1.5 overflow-x-auto py-1 pr-1"></div>
+            <div id="pig-roster-bar" class="flex items-center gap-1.5 overflow-x-auto py-1 pr-1 max-w-[260px] no-scrollbar"></div>
         </div>
 
         <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-700/70">
@@ -454,88 +577,6 @@
         </div>
     </aside>
 
-    <!-- Desktop Top Right: Economy Counter, Shop, Upgrades, Biomes & Codex -->
-    <aside id="desktop-right-panel" class="hidden md:flex fixed top-3 right-3 z-20 flex-col items-end gap-2">
-        <div class="hud-panel rounded-2xl p-2 flex flex-wrap items-center gap-2">
-            <!-- Coin Balance & Passive Income Display -->
-            <div class="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-amber-400/50 flex items-center gap-2.5">
-                <div class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]"></div>
-                <div>
-                    <div class="text-xs font-black text-amber-300 leading-none">
-                        <span id="coin-balance-desktop">300</span> 金幣
-                    </div>
-                    <div class="text-[10px] text-emerald-300 font-semibold mt-0.5">
-                        撫摸 +<span id="coin-per-touch-desktop">3</span> · 自動 +<span id="coin-per-sec-desktop">0</span>/秒
-                    </div>
-                </div>
-            </div>
-
-            <!-- Open Battle / Expedition -->
-            <button id="btn-open-battle-desktop" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-black text-xs shadow-lg transition flex items-center gap-1.5 animate-pulse">
-                <span>⚔️ 野豬遠征冒險</span>
-            </button>
-
-            <!-- Open Farmland Agriculture -->
-            <button id="btn-open-farm-desktop" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg transition flex items-center gap-1.5">
-                <span>🌾 皇家農田</span>
-            </button>
-
-            <!-- Open Shop & 24 Toys -->
-            <button id="btn-open-shop-desktop" class="px-3 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs shadow transition">
-                牧場商店與武庫
-            </button>
-
-            <!-- Open Upgrades -->
-            <button id="btn-open-upgrades-desktop" class="px-3 py-2 rounded-xl bg-emerald-500/25 hover:bg-emerald-500/40 border border-emerald-400/50 text-emerald-200 font-bold text-xs transition">
-                賺錢技能升級
-            </button>
-
-            <!-- Open Biomes -->
-            <button id="btn-open-biomes-desktop" class="px-3 py-2 rounded-xl bg-sky-500/25 hover:bg-sky-500/40 border border-sky-400/50 text-sky-200 font-bold text-xs transition">
-                更換背景
-            </button>
-
-            <!-- Recipe Codex -->
-            <button id="btn-open-codex" class="px-3 py-2 rounded-xl bg-pink-500/25 hover:bg-pink-500/40 border border-pink-400/50 text-pink-200 font-bold text-xs transition flex items-center gap-1.5">
-                <span>食譜圖鑑</span>
-                <span id="codex-counter-badge" class="px-1.5 py-0.5 rounded bg-slate-950/80 text-pink-200 text-[10px] font-bold">0 / 1023</span>
-            </button>
-
-            <!-- Multiplayer Co-op Hub Button -->
-            <button id="btn-open-coop-desktop" class="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500/25 to-teal-500/25 hover:from-emerald-500/40 hover:to-teal-500/40 border border-emerald-400/50 text-emerald-200 font-bold text-xs transition flex items-center gap-1.5 shadow">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" id="desktop-coop-dot"></span>
-                <span>共養代碼</span>
-                <span id="desktop-coop-code-badge" class="px-1.5 py-0.5 rounded bg-slate-900/90 text-amber-300 font-mono text-[10px]">連線中</span>
-            </button>
-
-            <!-- Wearable Hat Selector -->
-            <select id="hat-selector" aria-label="小豬頭飾" class="bg-slate-800 hover:bg-slate-700 text-amber-200 border border-slate-600/80 rounded-xl px-2.5 py-2 text-xs font-semibold focus:outline-none focus:border-amber-400 transition cursor-pointer">
-                <option value="none">頭飾：無</option>
-                <option value="sprout">頭飾：嫩綠豆苗</option>
-                <option value="chef">頭飾：皇家主廚帽</option>
-                <option value="straw">頭飾：田園草帽</option>
-                <option value="crown">頭飾：純金皇冠</option>
-                <option value="scarf">配飾：暖陽紅圍巾</option>
-                <option value="angel">神聖：天使光環與羽翼</option>
-                <option value="glasses">潮流：酷炫黑超墨鏡</option>
-                <option value="bell">配飾：皇家領結金鈴鐺</option>
-                <option value="wizard">魔幻：星宿大巫師帽</option>
-            </select>
-
-            <!-- Audio Toggle Button -->
-            <button id="btn-sound-toggle" title="切換音效" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600/60 transition">
-                <svg id="icon-sound-on" class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                </svg>
-                <svg id="icon-sound-off" class="w-4 h-4 text-rose-400 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <line x1="23" y1="9" x2="17" y2="15"></line>
-                    <line x1="17" y1="9" x2="23" y2="15"></line>
-                </svg>
-            </button>
-        </div>
-    </aside>
 
     <!-- Desktop Bottom Center: Collapsible Feeding Trough & 10 Ingredients Dock -->
     <section id="bottom-drawer" class="hidden md:block fixed bottom-2 left-1/2 -translate-x-1/2 z-20 w-[95vw] max-w-5xl hud-glass rounded-2xl p-3 pt-2 transition-all">
@@ -4200,12 +4241,52 @@
             const drawer = document.getElementById('bottom-drawer');
             const toggleBtn = document.getElementById('btn-toggle-drawer');
             const toggleLabel = document.getElementById('drawer-toggle-label');
-            toggleBtn.addEventListener('click', () => {
-                isDrawerCollapsed = !isDrawerCollapsed;
-                drawer.classList.toggle('drawer-collapsed', isDrawerCollapsed);
-                toggleLabel.textContent = isDrawerCollapsed ? '展開食材欄' : '收起食材欄';
-                sfx.playSoftTouch(isDrawerCollapsed ? 310 : 440);
-            });
+            if (toggleBtn && drawer) {
+                toggleBtn.addEventListener('click', () => {
+                    isDrawerCollapsed = !isDrawerCollapsed;
+                    drawer.classList.toggle('drawer-collapsed', isDrawerCollapsed);
+                    toggleLabel.textContent = isDrawerCollapsed ? '展開食材欄' : '收起食材欄';
+                    sfx.playSoftTouch(isDrawerCollapsed ? 310 : 440);
+                });
+            }
+
+            // Collapsible Top App Bar Toggle
+            const topBar = document.getElementById('top-app-bar');
+            const btnToggleTopNav = document.getElementById('btn-toggle-top-nav');
+            const btnExpandTopNav = document.getElementById('btn-expand-top-nav');
+            if (btnToggleTopNav && topBar) {
+                btnToggleTopNav.addEventListener('click', () => {
+                    topBar.classList.add('nav-collapsed');
+                    if (btnExpandTopNav) btnExpandTopNav.classList.remove('hidden');
+                    sfx.playSoftTouch(340);
+                });
+            }
+            if (btnExpandTopNav && topBar) {
+                btnExpandTopNav.addEventListener('click', () => {
+                    topBar.classList.remove('nav-collapsed');
+                    btnExpandTopNav.classList.add('hidden');
+                    sfx.playSoftTouch(460);
+                });
+            }
+
+            // Collapsible Desktop Left Panel Toggle
+            const leftPanel = document.getElementById('desktop-left-panel');
+            const btnToggleLeftPanel = document.getElementById('btn-toggle-left-panel');
+            const btnExpandLeftPanel = document.getElementById('btn-expand-left-panel');
+            if (btnToggleLeftPanel && leftPanel) {
+                btnToggleLeftPanel.addEventListener('click', () => {
+                    leftPanel.classList.add('panel-collapsed');
+                    if (btnExpandLeftPanel) btnExpandLeftPanel.classList.remove('hidden');
+                    sfx.playSoftTouch(320);
+                });
+            }
+            if (btnExpandLeftPanel && leftPanel) {
+                btnExpandLeftPanel.addEventListener('click', () => {
+                    leftPanel.classList.remove('panel-collapsed');
+                    btnExpandLeftPanel.classList.add('hidden');
+                    sfx.playSoftTouch(450);
+                });
+            }
 
             // Pig Name Inputs (Desktop & Mobile synced)
             const nameInput = document.getElementById('pig-name-input');

@@ -193,7 +193,8 @@ const CheemsArena = {
             this.weaponMesh = null;
         }
 
-        const wData = CHEEEMS_WEAPONS.find(w => w.id === weaponId) || CHEEEMS_WEAPONS[0];
+        const catalog = (typeof CHEEMS_WEAPONS !== 'undefined') ? CHEEMS_WEAPONS : (window.CHEEMS_WEAPONS || window.CHEEEMS_WEAPONS || []);
+        const wData = catalog.find(w => w.id === weaponId) || catalog[0] || { power: 30, color: 0xef4444 };
         const wGroup = new THREE.Group();
 
         // Build specialized 3D toy model
@@ -259,7 +260,8 @@ const CheemsArena = {
     },
 
     strikeCheems(customStrength = 1.0) {
-        const wData = CHEEEMS_WEAPONS.find(w => w.id === this.currentWeaponId) || CHEEEMS_WEAPONS[0];
+        const catalog = (typeof CHEEMS_WEAPONS !== 'undefined') ? CHEEMS_WEAPONS : (window.CHEEMS_WEAPONS || window.CHEEEMS_WEAPONS || []);
+        const wData = catalog.find(w => w.id === this.currentWeaponId) || catalog[0] || { power: 30 };
         const basePwr = wData.power || 30;
         const dmg = Math.round((basePwr * customStrength) * (1 + Math.random() * 0.4));
         const coinDrop = Math.max(2, Math.round(dmg * 0.45));

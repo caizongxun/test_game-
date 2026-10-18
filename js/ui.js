@@ -14,27 +14,23 @@ const UIManager = {
         if (!rosterBar) return;
         rosterBar.innerHTML = '';
 
+        const countBadge = document.getElementById('pig-count-badge');
+        if (countBadge) countBadge.textContent = `${gameState.pigs.length} 頭`;
+
         gameState.pigs.forEach((p, idx) => {
             const isActive = idx === gameState.activePigIndex;
             const itemContainer = document.createElement('div');
-            itemContainer.className = 'relative flex items-center group';
+            itemContainer.className = 'relative flex items-center shrink-0 group';
 
             const btn = document.createElement('button');
-            btn.className = `p-1.5 rounded-2xl flex items-center gap-2 transition border ${
+            btn.className = `w-9 h-9 rounded-full flex items-center justify-center text-sm transition border ${
                 isActive
-                    ? 'bg-rose-500/25 border-rose-400 text-white shadow-md ring-1 ring-rose-400/50'
-                    : 'bg-slate-900/80 border-slate-700 hover:border-slate-500 text-slate-300'
+                    ? 'ring-2 ring-rose-400 ring-offset-2 ring-offset-slate-900 scale-110 shadow-lg border-white/40 z-10'
+                    : 'border-slate-700/80 hover:border-slate-400 opacity-80 hover:opacity-100 hover:scale-105'
             }`;
-
-            btn.innerHTML = `
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-lg border border-white/20 shadow" style="background-color: ${p.color || '#ffb6c1'}">
-                    🐷
-                </div>
-                <div class="text-left pr-1 hidden sm:block">
-                    <div class="text-xs font-black leading-tight">${p.name || '小豬'}</div>
-                    <div class="text-[10px] text-slate-400">${p.weight.toFixed(1)}kg · Lv.${p.intimacyLevel}</div>
-                </div>
-            `;
+            btn.style.backgroundColor = p.color || '#ffb6c1';
+            btn.title = `【${p.name || '小豬'}】Lv.${p.intimacyLevel} · ${p.weight.toFixed(1)}kg (點擊選取)`;
+            btn.innerHTML = `<span class="drop-shadow">🐷</span>`;
 
             btn.addEventListener('click', () => {
                 this.selectActivePig(idx);
@@ -44,7 +40,7 @@ const UIManager = {
             // Delete / Release button (only if more than 1 pig exists)
             if (gameState.pigs.length > 1) {
                 const delBtn = document.createElement('button');
-                delBtn.className = 'absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-lg border border-rose-300 opacity-80 hover:opacity-100 transition z-10';
+                delBtn.className = 'absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-lg border border-rose-300 opacity-0 group-hover:opacity-100 transition z-20';
                 delBtn.title = `歡送【${p.name}】前往綠洲`;
                 delBtn.innerHTML = '✕';
                 delBtn.addEventListener('click', (e) => {
@@ -61,11 +57,12 @@ const UIManager = {
             rosterBar.appendChild(itemContainer);
         });
 
-        // Add Pig Button
+        // Add Pig Button (Compact Circular)
         const addBtn = document.createElement('button');
         const nextCost = gameState.getPigAdoptionCost();
-        addBtn.className = 'px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow transition shrink-0';
-        addBtn.innerHTML = `<span>➕ 領養新豬 (${nextCost}c)</span>`;
+        addBtn.className = 'w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow transition shrink-0 hover:scale-105 border border-amber-300/60';
+        addBtn.title = `領養新小豬 (費用：${nextCost} 金幣)`;
+        addBtn.innerHTML = `<span>➕</span>`;
         addBtn.addEventListener('click', () => {
             this.openAdoptModal();
         });
