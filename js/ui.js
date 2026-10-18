@@ -28,8 +28,9 @@ const UIManager = {
                     ? 'ring-2 ring-rose-400 ring-offset-2 ring-offset-slate-900 scale-110 shadow-lg border-white/40 z-10'
                     : 'border-slate-700/80 hover:border-slate-400 opacity-80 hover:opacity-100 hover:scale-105'
             }`;
-            btn.style.backgroundColor = p.color || '#ffb6c1';
-            btn.title = `【${p.name || '小豬'}】Lv.${p.intimacyLevel} · ${p.weight.toFixed(1)}kg (點擊選取)`;
+            const wt = (p.weight != null && !isNaN(p.weight)) ? Number(p.weight).toFixed(1) : '15.0';
+            const lv = p.intimacyLevel != null ? p.intimacyLevel : 1;
+            btn.title = `【${p.name || '小豬'}】Lv.${lv} · ${wt}kg (點擊選取)`;
             btn.innerHTML = `<span class="drop-shadow">🐷</span>`;
 
             btn.addEventListener('click', () => {

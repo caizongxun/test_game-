@@ -28,14 +28,14 @@
     <!-- Modular Game Systems -->
     <script src="js/constants.js?v=20261018_v4"></script>
     <script src="js/state.js?v=20261018_v2"></script>
-    <script src="js/camera.js?v=20261018_v2"></script>
-    <script src="js/pig.js?v=20261018_v2"></script>
+    <script src="js/camera.js?v=20261018_v5"></script>
+    <script src="js/pig.js?v=20261018_v5"></script>
     <script src="js/interactions.js?v=20261018_v2"></script>
     <script src="js/farm.js?v=20261018_v3"></script>
     <script src="js/battle.js?v=20261018_v3"></script>
     <script src="js/cheems.js?v=20261018_v4"></script>
-    <script src="js/pixel-battle.js?v=20261018_v4"></script>
-    <script src="js/ui.js?v=20261018_v4"></script>
+    <script src="js/pixel-battle.js?v=20261018_v5"></script>
+    <script src="js/ui.js?v=20261018_v5"></script>
 
     <style>
         * {
@@ -451,6 +451,8 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                <select id="pixel-stage-select" class="px-2.5 py-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-500/60 text-xs font-bold text-amber-300 transition cursor-pointer max-w-[200px] truncate" onchange="PixelBattle.changeStage(parseInt(this.value))">
+                </select>
                 <button class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 transition" onclick="switchScene('ranch')">
                     ✕ 返回牧場
                 </button>
@@ -1353,6 +1355,12 @@
         rimLight.position.set(-16, 18, -16);
         scene.add(rimLight);
 
+        // Dedicated 3D Ranch Scene Group for full multi-scene isolation
+        const ranchRootGroup = new THREE.Group();
+        ranchRootGroup.name = 'RanchRootGroup';
+        scene.add(ranchRootGroup);
+        window.ranchRootGroup = ranchRootGroup;
+
         // Cannon.js Physics World
         const world = new CANNON.World();
         world.gravity.set(0, -18, 0);
@@ -1715,7 +1723,7 @@
                 Math.random() * 0.4,
                 (Math.random() - 0.5) * 0.7
             ));
-            scene.add(mesh);
+            (window.ranchRootGroup || scene).add(mesh);
             particles3D.push({
                 mesh,
                 vel: new THREE.Vector3((Math.random() - 0.5) * 0.8, 1.2 + Math.random() * 0.9, (Math.random() - 0.5) * 0.8),
@@ -1734,7 +1742,7 @@
             });
             const ringMesh = new THREE.Mesh(ringGeo, ringMat);
             ringMesh.position.set(zone.pos.x, 0.03, zone.pos.z);
-            scene.add(ringMesh);
+            (window.ranchRootGroup || scene).add(ringMesh);
             zoneRingMeshes[zone.id] = ringMesh;
         }
 
@@ -1775,7 +1783,7 @@
                 troughGroup.add(strap);
             });
 
-            scene.add(troughGroup);
+            (window.ranchRootGroup || scene).add(troughGroup);
 
             // Dynamic 3D Signboard above Trough
             troughStatusCanvas = document.createElement('canvas');
@@ -1786,7 +1794,7 @@
             const signSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: troughStatusTex, transparent: true, depthTest: false }));
             signSprite.scale.set(3.8, 1.05, 1);
             signSprite.position.set(zp.x, 2.35, zp.z);
-            scene.add(signSprite);
+            (window.ranchRootGroup || scene).add(signSprite);
             updateTrough3DSignboard();
         }
 
@@ -1833,7 +1841,7 @@
             label.position.set(0, 3.85, 0);
             barnGroup.add(label);
 
-            scene.add(barnGroup);
+            (window.ranchRootGroup || scene).add(barnGroup);
         }
 
         function buildZone3WarmSpringBath() {
@@ -1892,7 +1900,7 @@
             label.position.set(0, 2.25, 0);
             tubGroup.add(label);
 
-            scene.add(tubGroup);
+            (window.ranchRootGroup || scene).add(tubGroup);
         }
 
         function buildZone4PlayAndBowlingYard() {
@@ -1914,11 +1922,11 @@
             trampolinePadMesh.position.y = 0.34;
             trampolinePadMesh.receiveShadow = true;
             trampGroup.add(trampolinePadMesh);
-            scene.add(trampGroup);
+            (window.ranchRootGroup || scene).add(trampGroup);
 
             const label = createLabelSprite('保齡球與玩具遊樂區', 'rgba(6,78,59,0.86)', '#34d399', 2.9);
             label.position.set(zp.x, 2.35, zp.z);
-            scene.add(label);
+            (window.ranchRootGroup || scene).add(label);
         }
 
         function buildCountrysideEnvironment() {
@@ -1929,7 +1937,7 @@
             );
             outerGround.position.y = -0.5;
             outerGround.receiveShadow = true;
-            scene.add(outerGround);
+            (window.ranchRootGroup || scene).add(outerGround);
 
             const turfGeo = new THREE.CircleGeometry(15.2, 72, 0);
             turfGeo.rotateX(-Math.PI / 2);
@@ -1943,7 +1951,7 @@
             );
             innerTurf.position.y = 0.01;
             innerTurf.receiveShadow = true;
-            scene.add(innerTurf);
+            (window.ranchRootGroup || scene).add(innerTurf);
 
             const stoneMat = createMatteMaterial(0x94a3b8, 0.88);
             const warmStoneMat = createMatteMaterial(0xa8a29e, 0.86);
@@ -1966,7 +1974,7 @@
                     cobble.position.set(sx, 0.025, sz);
                     cobble.rotation.y = s * 0.8;
                     cobble.receiveShadow = true;
-                    scene.add(cobble);
+                    (window.ranchRootGroup || scene).add(cobble);
                 }
             });
 
@@ -1976,7 +1984,7 @@
             );
             centerStone.position.set(0, 0.025, 0.4);
             centerStone.receiveShadow = true;
-            scene.add(centerStone);
+            (window.ranchRootGroup || scene).add(centerStone);
 
             const woodFenceMat = createMatteMaterial(0x7c5334, 0.86);
             const darkWoodMat = createMatteMaterial(0x5c3a21, 0.88);
@@ -1994,11 +2002,11 @@
                 post.position.set(x1, 0.67, z1);
                 post.castShadow = true;
                 post.receiveShadow = true;
-                scene.add(post);
+                (window.ranchRootGroup || scene).add(post);
 
                 const cap = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.18, 8), woodFenceMat);
                 cap.position.set(x1, 1.42, z1);
-                scene.add(cap);
+                (window.ranchRootGroup || scene).add(cap);
 
                 const midX = (x1 + x2) * 0.5;
                 const midZ = (z1 + z2) * 0.5;
@@ -2010,7 +2018,7 @@
                     rail.position.set(midX, ry, midZ);
                     rail.rotation.y = angle;
                     rail.castShadow = true;
-                    scene.add(rail);
+                    (window.ranchRootGroup || scene).add(rail);
                 });
             }
 
@@ -2027,7 +2035,7 @@
                 hill.scale.y = hc.h / hc.r;
                 hill.position.set(hc.x, -0.3, hc.z);
                 hill.receiveShadow = true;
-                scene.add(hill);
+                (window.ranchRootGroup || scene).add(hill);
             });
 
             const windmillGroup = new THREE.Group();
@@ -2063,7 +2071,7 @@
                 windmillBladesGroup.add(armGrp);
             }
             windmillGroup.add(windmillBladesGroup);
-            scene.add(windmillGroup);
+            (window.ranchRootGroup || scene).add(windmillGroup);
 
             envRefs.foliageMat1 = createMatteMaterial(0x3f6e36, 0.9);
             envRefs.foliageMat2 = createMatteMaterial(0x4f8242, 0.88);
@@ -2110,7 +2118,7 @@
                 }
                 const s = 0.85 + (t % 4) * 0.14;
                 tree.scale.set(s, s, s);
-                scene.add(tree);
+                (window.ranchRootGroup || scene).add(tree);
             }
 
             const flowerColors = [0xfde047, 0xf9a8d4, 0x93c5fd, 0xfdba74];
@@ -2124,7 +2132,7 @@
                     createMatteMaterial(flowerColors[f % flowerColors.length], 0.8)
                 );
                 flMesh.position.set(fx, 0.05, fz);
-                scene.add(flMesh);
+                (window.ranchRootGroup || scene).add(flMesh);
             }
 
             const cloudMat = createMatteMaterial(0xf8fafc, 0.95);
@@ -2142,7 +2150,7 @@
                     cGrp.add(m);
                 });
                 cGrp.position.set(-22 + c * 9, 15.5 + (c % 2) * 2.2, -16 - (c % 3) * 5);
-                scene.add(cGrp);
+                (window.ranchRootGroup || scene).add(cGrp);
                 driftingClouds.push({ mesh: cGrp, speed: 0.35 + (c % 3) * 0.12 });
             }
 
@@ -2734,7 +2742,7 @@
                         const pinObj = { type: 'TOY', toyId: 'bowling', isPin: true, homeX: px, homeZ: pz, knocked: false, mesh: pinGroup, body: pinBody };
                         pinGroup.userData = { interactType: 'TOY', ref: pinObj };
                         pinGroup.traverse(c => { if (c.isMesh) c.userData = { interactType: 'TOY', ref: pinObj }; });
-                        scene.add(pinGroup);
+                        (window.ranchRootGroup || scene).add(pinGroup);
                         toyItems.push(pinObj);
                         bowlingPins.push(pinObj);
                     });
@@ -2758,7 +2766,7 @@
                     const obj = { type: 'TOY', toyId: toyMeta.id, mesh, body };
                     mesh.userData = { interactType: 'TOY', ref: obj };
                     mesh.traverse(c => { if (c.isMesh) c.userData = { interactType: 'TOY', ref: obj }; });
-                    scene.add(mesh);
+                    (window.ranchRootGroup || scene).add(mesh);
                     toyItems.push(obj);
                     idxCounter++;
                 }
@@ -2801,7 +2809,7 @@
             const standLabel = createLabelSprite('鮮食木架 (可直接抓取投入食槽)', 'rgba(67,20,7,0.88)', '#fb923c', 4.1);
             standLabel.position.set(0, 3.05, 0);
             standGroup.add(standLabel);
-            scene.add(standGroup);
+            (window.ranchRootGroup || scene).add(standGroup);
 
             INGREDIENTS.forEach((ing, idx) => {
                 const tier = idx < 5 ? 0 : 1;
@@ -2816,12 +2824,12 @@
                 mesh.traverse(ch => {
                     if (ch.isMesh) ch.userData = { interactType: 'PANTRY_ING', ingCode: ing.code };
                 });
-                scene.add(mesh);
+                (window.ranchRootGroup || scene).add(mesh);
 
                 const codeTag = createLabelSprite(ing.short, 'rgba(15,23,42,0.85)', ing.color, 1.25);
                 codeTag.scale.set(1.15, 0.32, 1);
                 codeTag.position.set(worldPos.x, worldPos.y - 0.38, worldPos.z + 0.25);
-                scene.add(codeTag);
+                (window.ranchRootGroup || scene).add(codeTag);
 
                 pantryDisplayItems.push({ mesh, basePos: worldPos.clone(), phase: idx * 0.7 });
             });
@@ -2850,7 +2858,8 @@
 
             if (activeIngredientItems.length >= 20) {
                 const oldest = activeIngredientItems.shift();
-                scene.remove(oldest.mesh);
+                if (oldest.mesh.parent) oldest.mesh.parent.remove(oldest.mesh);
+                else scene.remove(oldest.mesh);
                 world.remove(oldest.body);
             }
 
@@ -2875,7 +2884,7 @@
             const itemObj = { type: 'INGREDIENT', code, ing, mesh, body };
             mesh.userData = { interactType: 'INGREDIENT', ref: itemObj };
             mesh.traverse(c => { if (c.isMesh) c.userData = { interactType: 'INGREDIENT', ref: itemObj }; });
-            scene.add(mesh);
+            (window.ranchRootGroup || scene).add(mesh);
             activeIngredientItems.push(itemObj);
 
             if (autoRegisterTrough) {
@@ -3557,14 +3566,18 @@
             if (cSecMob) cSecMob.textContent = autoCoin;
             if (cShop) cShop.textContent = coins;
 
-            // Level & Weight
-            document.getElementById('stat-level').textContent = gameState.intimacyLevel;
-            document.getElementById('stat-weight').textContent = gameState.weight.toFixed(1);
-            document.getElementById('stat-state').textContent = gameState.stateLabel;
-            const lvMob = document.getElementById('stat-level-mobile');
-            const wtMob = document.getElementById('stat-weight-mobile');
-            if (lvMob) lvMob.textContent = gameState.intimacyLevel;
-            if (wtMob) wtMob.textContent = gameState.weight.toFixed(1);
+            // Level & Weight (read from active pig or gameState safely)
+            const curActivePig = (typeof gameState.getActivePig === 'function') ? gameState.getActivePig() : null;
+            const dispLevel = (curActivePig && curActivePig.intimacyLevel != null) ? curActivePig.intimacyLevel : (gameState.intimacyLevel || 1);
+            const rawWeight = (curActivePig && curActivePig.weight != null) ? curActivePig.weight : gameState.weight;
+            const dispWeight = (rawWeight != null && !isNaN(rawWeight)) ? Number(rawWeight).toFixed(1) : '15.0';
+            const dispState = (curActivePig && curActivePig.stateLabel) ? curActivePig.stateLabel : (gameState.stateLabel || '閒晃中');
+
+            const statLevelEl = document.getElementById('stat-level'); if (statLevelEl) statLevelEl.textContent = dispLevel;
+            const statWeightEl = document.getElementById('stat-weight'); if (statWeightEl) statWeightEl.textContent = dispWeight;
+            const statStateEl = document.getElementById('stat-state'); if (statStateEl) statStateEl.textContent = dispState;
+            const lvMob = document.getElementById('stat-level-mobile'); if (lvMob) lvMob.textContent = dispLevel;
+            const wtMob = document.getElementById('stat-weight-mobile'); if (wtMob) wtMob.textContent = dispWeight;
 
             const h = Math.round(gameState.hunger);
             const m = Math.round(gameState.mood);
@@ -4604,7 +4617,7 @@
                 shareModal.classList.remove('flex');
             });
 
-            // Scene Switcher Navigation Tabs
+            // Scene Switcher Navigation Tabs with full 3D group isolation
             const switchSceneFn = (sceneName) => {
                 if (typeof FarmSystem !== 'undefined') FarmSystem.leaveFarmScene();
                 if (typeof CheemsArena !== 'undefined') {
@@ -4614,24 +4627,44 @@
                 }
                 if (typeof PixelBattle !== 'undefined') PixelBattle.exit();
 
-                const ranchGroup = scene.getObjectByName('CountrysideEnvironment');
-                const pantry = scene.getObjectByName('PantryStand');
+                const ranchGroup = window.ranchRootGroup;
                 document.querySelectorAll('.scene-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+                const leftPanel = document.getElementById('desktop-left-panel');
+                const expandLeftBtn = document.getElementById('btn-expand-left-panel');
+                const bottomDrawer = document.getElementById('bottom-drawer');
+                const mobileSheet = document.getElementById('mobile-sheet');
+                const mobileBottomNav = document.getElementById('mobile-bottom-nav');
 
                 if (sceneName === 'ranch') {
                     const btn = document.getElementById('nav-btn-ranch'); if (btn) btn.classList.add('active');
                     if (ranchGroup) ranchGroup.visible = true;
-                    if (pantry) pantry.visible = true;
+                    if (leftPanel) leftPanel.classList.remove('hidden');
+                    if (bottomDrawer) bottomDrawer.classList.remove('hidden');
+                    if (mobileBottomNav) mobileBottomNav.classList.remove('hidden');
                     if (typeof CameraManager !== 'undefined') CameraManager.resetOverview();
+                    if (typeof applyBiomeTheme === 'function' && gameState.currentBiome) applyBiomeTheme(gameState.currentBiome);
                 } else if (sceneName === 'farm') {
                     const btn = document.getElementById('nav-btn-farm'); if (btn) btn.classList.add('active');
                     if (ranchGroup) ranchGroup.visible = false;
-                    if (pantry) pantry.visible = false;
+                    if (leftPanel) leftPanel.classList.add('hidden');
+                    if (expandLeftBtn) expandLeftBtn.classList.add('hidden');
+                    if (bottomDrawer) bottomDrawer.classList.add('hidden');
+                    if (mobileSheet) mobileSheet.classList.add('sheet-hidden');
+                    if (mobileBottomNav) mobileBottomNav.classList.add('hidden');
+                    if (scene.background) scene.background.setHex(0xecfdf5);
+                    if (scene.fog) scene.fog.color.setHex(0xecfdf5);
                     if (typeof FarmSystem !== 'undefined') FarmSystem.enterFarmScene();
                 } else if (sceneName === 'cheems') {
                     const btn = document.getElementById('nav-btn-cheems'); if (btn) btn.classList.add('active');
                     if (ranchGroup) ranchGroup.visible = false;
-                    if (pantry) pantry.visible = false;
+                    if (leftPanel) leftPanel.classList.add('hidden');
+                    if (expandLeftBtn) expandLeftBtn.classList.add('hidden');
+                    if (bottomDrawer) bottomDrawer.classList.add('hidden');
+                    if (mobileSheet) mobileSheet.classList.add('sheet-hidden');
+                    if (mobileBottomNav) mobileBottomNav.classList.add('hidden');
+                    if (scene.background) scene.background.setHex(0x18181b);
+                    if (scene.fog) scene.fog.color.setHex(0x18181b);
                     if (typeof CheemsArena !== 'undefined') {
                         if (CheemsArena.group) CheemsArena.group.visible = true;
                         const cheemsHud = document.getElementById('cheems-arena-overlay');
@@ -4642,6 +4675,12 @@
                     }
                 } else if (sceneName === 'pixel') {
                     const btn = document.getElementById('nav-btn-pixel'); if (btn) btn.classList.add('active');
+                    if (ranchGroup) ranchGroup.visible = false;
+                    if (leftPanel) leftPanel.classList.add('hidden');
+                    if (expandLeftBtn) expandLeftBtn.classList.add('hidden');
+                    if (bottomDrawer) bottomDrawer.classList.add('hidden');
+                    if (mobileSheet) mobileSheet.classList.add('sheet-hidden');
+                    if (mobileBottomNav) mobileBottomNav.classList.add('hidden');
                     if (typeof PixelBattle !== 'undefined') PixelBattle.enter();
                 }
             };
@@ -5122,8 +5161,22 @@
                 if (pig) pig.setSkinColor(serverPet.color);
                 if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
             }
-            if (serverPet.pigs && Array.isArray(serverPet.pigs)) {
-                gameState.pigs = serverPet.pigs;
+            if (serverPet.pigs && Array.isArray(serverPet.pigs) && serverPet.pigs.length > 0) {
+                gameState.pigs = serverPet.pigs.map((p, idx) => ({
+                    id: p.id || `pig_${Date.now()}_${idx}`,
+                    name: p.name || `小豬${idx + 1}`,
+                    weight: (p.weight != null && !isNaN(p.weight)) ? Number(p.weight) : (p.weight_kg != null ? Number(p.weight_kg) : 15.0),
+                    intimacyLevel: Number(p.intimacyLevel || p.intimacy_level) || 1,
+                    intimacy: Number(p.intimacy) || 0,
+                    hunger: Number(p.hunger) || 80,
+                    mood: Number(p.mood) || 85,
+                    energy: Number(p.energy) || 90,
+                    cleanliness: Number(p.cleanliness) || 92,
+                    color: p.color || '#ffb6c1',
+                    currentHat: p.currentHat || p.current_hat || 'none',
+                    equippedWeapon: p.equippedWeapon || p.equipped_weapon || null,
+                    stateLabel: p.stateLabel || '閒晃中'
+                }));
                 if (typeof PigManager !== 'undefined') PigManager.syncFromGameState(gameState.pigs);
                 if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
             }

@@ -29,7 +29,8 @@ const CameraManager = {
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
             const code = e.code;
-            if (['KeyW', 'KeyS', 'KeyA', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code)) {
+            // Arrow keys only for camera panning; WASD is strictly reserved for Pixel Battle game
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code)) {
                 this.keyState[code] = true;
                 this.isFollowingPig = false;
             }
@@ -100,13 +101,13 @@ const CameraManager = {
     update(dt) {
         if (!this.camera || !this.controls) return;
 
-        // Process WASD Keyboard Pan
+        // Process Arrow Keyboard Pan (WASD reserved for pixel brawler)
         let dx = 0;
         let dz = 0;
-        if (this.keyState['KeyW'] || this.keyState['ArrowUp']) dz += 1;
-        if (this.keyState['KeyS'] || this.keyState['ArrowDown']) dz -= 1;
-        if (this.keyState['KeyA'] || this.keyState['ArrowLeft']) dx -= 1;
-        if (this.keyState['KeyD'] || this.keyState['ArrowRight']) dx += 1;
+        if (this.keyState['ArrowUp']) dz += 1;
+        if (this.keyState['ArrowDown']) dz -= 1;
+        if (this.keyState['ArrowLeft']) dx -= 1;
+        if (this.keyState['ArrowRight']) dx += 1;
 
         if (dx !== 0 || dz !== 0) {
             const factor = this.panSpeed * dt;

@@ -78,7 +78,7 @@ class PerVertexSoftBodyPig {
         this.root = new THREE.Group();
         this.visualGroup = new THREE.Group();
         this.root.add(this.visualGroup);
-        scene.add(this.root);
+        (window.ranchRootGroup || scene).add(this.root);
 
         this.proceduralPigGroup = new THREE.Group();
         this.visualGroup.add(this.proceduralPigGroup);
