@@ -11,9 +11,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <!-- Three.js r128 & OrbitControls -->
+    <!-- Three.js r128 & OrbitControls & GLTFLoader -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <!-- Cannon.js 0.6.2 3D Physics Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
     <!-- Supabase Client v2 & Multiplayer Co-op Sync -->
@@ -2580,7 +2581,7 @@
             spawnOrSyncActiveToys();
         }
 
-        function spawnIngredient3D(code, customPos = null, autoRegisterTrough = true) {
+        function spawnIngredient3D(code, customPos = null, autoRegisterTrough = true, broadcast = true) {
             const ing = INGREDIENTS.find(x => x.code === code);
             if (!ing) return null;
 
@@ -2635,10 +2636,20 @@
                 sfx.playSoftTouch(420);
             }
             updateHUD();
+
+            if (broadcast && typeof MultiplayerSync !== 'undefined') {
+                MultiplayerSync.recordAction('TROUGH_ADD', 0, {
+                    code,
+                    ing_stock: gameState.ingStock,
+                    trough_mask: gameState.troughMask,
+                    coins: gameState.coins
+                });
+            }
+
             return itemObj;
         }
 
-        function clearTroughIngredients() {
+        function clearTroughIngredients(broadcast = true) {
             for (let i = activeIngredientItems.length - 1; i >= 0; i--) {
                 const it = activeIngredientItems[i];
                 scene.remove(it.mesh);
@@ -2647,6 +2658,13 @@
             activeIngredientItems.length = 0;
             gameState.troughMask = 0;
             syncTroughRecipeUI();
+
+            if (broadcast && typeof MultiplayerSync !== 'undefined') {
+                MultiplayerSync.recordAction('TROUGH_CLEAR', 0, {
+                    ing_stock: gameState.ingStock,
+                    trough_mask: 0
+                });
+            }
         }
 
         // Note: PerVertexSoftBodyPig & PigManager are modularly loaded from js/pig.js
@@ -4112,10 +4130,24 @@
             document.getElementById('btn-mobile-cook').addEventListener('click', () => {
                 if (gameState.troughMask > 0) consumeTroughDish();
             });
-            document.getElementById('m-btn-feed').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.FEED; mobileSheet.classList.add('sheet-hidden'); });
-            document.getElementById('m-btn-sleep').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.SLEEP; mobileSheet.classList.add('sheet-hidden'); });
-            document.getElementById('m-btn-play').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.PLAY; mobileSheet.classList.add('sheet-hidden'); });
-            document.getElementById('m-btn-bath').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.BATH; mobileSheet.classList.add('sheet-hidden'); });
+            const navigateToZone = (zoneKey, sfxFn) => {
+                if (pig && ZONES[zoneKey]) {
+                    pig.targetZone = ZONES[zoneKey];
+                    pig.aiState = 'NAVIGATE';
+                }
+                if (sfxFn) sfxFn();
+                if (typeof MultiplayerSync !== 'undefined') {
+                    MultiplayerSync.broadcastPigPosition({
+                        action: 'NAVIGATE',
+                        zone: zoneKey
+                    });
+                }
+            };
+
+            document.getElementById('m-btn-feed').addEventListener('click', () => { navigateToZone('FEED', () => sfx.playOink(1.05)); mobileSheet.classList.add('sheet-hidden'); });
+            document.getElementById('m-btn-sleep').addEventListener('click', () => { navigateToZone('SLEEP', () => sfx.playOink(0.92)); mobileSheet.classList.add('sheet-hidden'); });
+            document.getElementById('m-btn-play').addEventListener('click', () => { navigateToZone('PLAY', () => sfx.playOink(1.12)); mobileSheet.classList.add('sheet-hidden'); });
+            document.getElementById('m-btn-bath').addEventListener('click', () => { navigateToZone('BATH', () => sfx.playSplash()); mobileSheet.classList.add('sheet-hidden'); });
             document.getElementById('m-btn-cam').addEventListener('click', () => {
                 camera.position.set(0, 12.2, 19.5);
                 controls.target.set(0, 1.3, 0.5);
@@ -4129,10 +4161,10 @@
             });
 
             // Desktop Zone Navigation Buttons
-            document.getElementById('btn-go-feed').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.FEED; sfx.playOink(1.05); });
-            document.getElementById('btn-go-sleep').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.SLEEP; sfx.playOink(0.92); });
-            document.getElementById('btn-go-play').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.PLAY; sfx.playOink(1.12); });
-            document.getElementById('btn-go-bath').addEventListener('click', () => { if (pig) pig.targetZone = ZONES.BATH; sfx.playSplash(); });
+            document.getElementById('btn-go-feed').addEventListener('click', () => navigateToZone('FEED', () => sfx.playOink(1.05)));
+            document.getElementById('btn-go-sleep').addEventListener('click', () => navigateToZone('SLEEP', () => sfx.playOink(0.92)));
+            document.getElementById('btn-go-play').addEventListener('click', () => navigateToZone('PLAY', () => sfx.playOink(1.12)));
+            document.getElementById('btn-go-bath').addEventListener('click', () => navigateToZone('BATH', () => sfx.playSplash()));
             document.getElementById('btn-camera-reset').addEventListener('click', () => {
                 camera.position.set(0, 12.2, 19.5);
                 controls.target.set(0, 1.3, 0.5);
@@ -4415,59 +4447,146 @@
 
                 MultiplayerSync.on('actionReceived', action => {
                     appendActionFeedUI(action);
-                    if (action.player_name && action.player_name !== MultiplayerSync.getPlayerName()) {
+                    const pName = action.player_name || action.sender;
+                    if (pName && pName !== MultiplayerSync.getPlayerName()) {
+                        const d = action.details || {};
+
+                        // 1. 同步食物庫存與食譜圖鑑 (全域即時生效)
+                        if (d.ing_stock) {
+                            gameState.ingStock = Object.assign({}, d.ing_stock);
+                            syncTroughRecipeUI();
+                        }
+                        if (d.unlocked_recipes) {
+                            gameState.unlockedRecipes = Object.assign(gameState.unlockedRecipes || {}, d.unlocked_recipes);
+                            if (typeof renderCodexModalList === 'function') renderCodexModalList();
+                        }
+
+                        // 2. 各類型互動即時生效
                         if (action.action_type === 'FEED') {
+                            if (d.hunger !== undefined) gameState.hunger = d.hunger;
+                            if (d.mood !== undefined) gameState.mood = d.mood;
+                            if (d.energy !== undefined) gameState.energy = d.energy;
+                            if (d.weight !== undefined) gameState.weight = d.weight;
+                            clearTroughIngredients(false);
                             if (pig) {
                                 pig.body.velocity.y = 5.0;
                                 pig.happyTimer = 2.0;
                                 spawn3DParticle('HEART', pig.root.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
-                                spawnFloatingText(`${action.player_name} 餵食了料理！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.6, 0)), '#34d399');
+                                spawnFloatingText(`${pName} 餵食了料理【${d.recipe_name || ''}】！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.6, 0)), '#34d399');
                             }
                             sfx.playChime();
+                            updateHUD();
+                        } else if (action.action_type === 'TROUGH_ADD') {
+                            if (d.code) spawnIngredient3D(d.code, null, true, false);
+                            sfx.playSoftTouch(420);
+                            syncTroughRecipeUI();
+                        } else if (action.action_type === 'TROUGH_CLEAR') {
+                            clearTroughIngredients(false);
+                        } else if (action.action_type === 'BUY_FOOD') {
+                            syncTroughRecipeUI();
+                            updateHUD();
+                            if (pig) spawnFloatingText(`${pName} 採購了鮮食【${d.ing_name || ''}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#38bdf8');
                         } else if (action.action_type === 'TOUCH') {
                             if (pig) {
                                 pig.happyTimer = 1.5;
                                 spawn3DParticle('HEART', pig.root.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
-                                spawnFloatingText(`${action.player_name} 撫摸了小豬！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#fbbf24');
+                                spawnFloatingText(`${pName} 撫摸了小豬！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#fbbf24');
                             }
                             sfx.playOink(1.1);
                         } else if (action.action_type === 'CHANGE_HAT') {
-                            if (pig && action.details && action.details.current_hat) {
-                                pig.setHat(action.details.current_hat);
-                                spawnFloatingText(`${action.player_name} 為小豬換上了新裝扮！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#ec4899');
+                            if (d.current_hat) {
+                                gameState.currentHat = d.current_hat;
+                                if (pig) pig.setHat(d.current_hat);
+                                const hatSel = document.getElementById('hat-selector');
+                                if (hatSel) hatSel.value = d.current_hat;
+                                spawnFloatingText(`${pName} 為小豬換上了新帽子！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#ec4899');
                             }
+                        } else if (action.action_type === 'CHANGE_OUTFIT') {
+                            if (d.current_outfit !== undefined) {
+                                gameState.currentOutfit = d.current_outfit;
+                                if (pig) pig.setOutfit(d.current_outfit);
+                                if (d.owned_outfits) gameState.ownedOutfits = d.owned_outfits;
+                                spawnFloatingText(`${pName} 為小豬換上了新服裝！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#ec4899');
+                            }
+                        } else if (action.action_type === 'CHANGE_COLOR') {
+                            if (d.color) {
+                                gameState.getActivePig().color = d.color;
+                                if (pig) pig.setSkinColor(d.color);
+                                if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
+                                spawnFloatingText(`${pName} 為小豬染上了新毛色！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#2dd4bf');
+                            }
+                        } else if (action.action_type === 'ADOPT_PIG') {
+                            if (d.pigs && Array.isArray(d.pigs)) {
+                                gameState.pigs = d.pigs;
+                                if (typeof PigManager !== 'undefined') PigManager.syncFromGameState(gameState.pigs);
+                                if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
+                                spawnFloatingText(`${pName} 領養了新小豬！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#f59e0b');
+                            }
+                        } else if (action.action_type === 'EQUIP_CHANGE') {
+                            if (d.weapon !== undefined) {
+                                gameState.equippedWeapon = d.weapon;
+                                if (pig) pig.setWeapon(d.weapon);
+                            }
+                            if (d.shield !== undefined) {
+                                gameState.equippedShield = d.shield;
+                                if (pig) pig.setShield(d.shield);
+                            }
+                            if (d.owned_equip) gameState.ownedEquip = d.owned_equip;
+                            spawnFloatingText(`${pName} 更換了戰鬥裝備！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#38bdf8');
                         } else if (action.action_type === 'RENAME') {
-                            if (action.details && action.details.name) {
-                                gameState.pigName = action.details.name;
+                            if (d.name) {
+                                gameState.pigName = d.name;
                                 const nameInp = document.getElementById('pig-name-input');
                                 if (nameInp && document.activeElement !== nameInp) nameInp.value = gameState.pigName;
                                 const mobName = document.getElementById('pig-name-input-mobile');
                                 if (mobName && document.activeElement !== mobName) mobName.value = gameState.pigName;
                                 if (pig) pig.updateNameplate();
-                                spawnFloatingText(`${action.player_name} 將小豬改名為【${action.details.name}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#ec4899');
+                                spawnFloatingText(`${pName} 將小豬改名為【${d.name}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#ec4899');
                             }
                         } else if (action.action_type === 'BATTLE_WIN') {
                             if (pig) {
                                 pig.body.velocity.y = 6.0;
                                 pig.happyTimer = 2.5;
                                 spawn3DParticle('STAR', pig.root.position.clone().add(new THREE.Vector3(0, 2.2, 0)));
-                                spawnFloatingText(`⚔️ ${action.player_name} 討伐了 ${action.details.boss || '魔物'}！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.8, 0)), '#fbbf24');
+                                spawnFloatingText(`⚔️ ${pName} 討伐了 ${d.boss || '魔物'}！+${action.delta_coins || 0} 金幣`, pig.root.position.clone().add(new THREE.Vector3(0, 2.8, 0)), '#fbbf24');
                             }
                             sfx.playVictoryFanfare();
-                        } else if (action.action_type === 'EQUIP_CHANGE') {
-                            if (pig) {
-                                if (action.details.weapon !== undefined) pig.setWeapon(action.details.weapon);
-                                if (action.details.shield !== undefined) pig.setShield(action.details.shield);
-                                spawnFloatingText(`${action.player_name} 更換了戰鬥裝備！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#38bdf8');
-                            }
                         } else if (action.action_type === 'BUY_ESTATE') {
-                            if (pig) spawnFloatingText(`${action.player_name} 建設了莊園【${action.details.name || ''}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#f59e0b');
+                            if (d.estate_levels) gameState.estateLevels = d.estate_levels;
+                            if (pig) spawnFloatingText(`${pName} 建設了莊園【${d.name || ''}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#f59e0b');
                         } else if (action.action_type === 'GACHA') {
-                            if (pig) spawnFloatingText(`${action.player_name} 開啟了盲盒獲得【${action.details.prizeName || '神秘大獎'}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#a855f7');
+                            if (pig) spawnFloatingText(`${pName} 開啟了盲盒獲得【${d.prizeName || '神秘大獎'}】！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#a855f7');
                         } else if (action.action_type === 'BUY_TOY') {
-                            if (pig) spawnFloatingText(`${action.player_name} 添購了新玩具！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#a855f7');
+                            if (d.owned_toys) gameState.ownedToys = d.owned_toys;
+                            if (pig) spawnFloatingText(`${pName} 添購了新玩具！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#a855f7');
                         } else if (action.action_type === 'UPGRADE') {
-                            if (pig) spawnFloatingText(`${action.player_name} 升級了賺錢技能！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#10b981');
+                            if (d.upgrade_levels) gameState.upgradeLevels = d.upgrade_levels;
+                            if (pig) spawnFloatingText(`${pName} 升級了賺錢技能！`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#10b981');
+                        }
+                    }
+                });
+
+                // 即時小豬位置與動作監聽
+                MultiplayerSync.on('pigPositionReceived', data => {
+                    if (!pig) return;
+                    if (data.action === 'NAVIGATE' && data.zone && ZONES[data.zone]) {
+                        pig.targetZone = ZONES[data.zone];
+                        pig.aiState = 'NAVIGATE';
+                    } else if (data.action === 'DRAGGING') {
+                        pig.body.position.x = data.x;
+                        pig.body.position.z = data.z;
+                        pig.body.velocity.set(0, 0, 0);
+                        if (Math.random() < 0.2) {
+                            spawn3DParticle('SPARKLE', pig.root.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
+                        }
+                    } else if (data.action === 'WANDER') {
+                        const dist = Math.hypot(pig.body.position.x - data.x, pig.body.position.z - data.z);
+                        if (dist > 3.2) {
+                            pig.body.position.x += (data.x - pig.body.position.x) * 0.35;
+                            pig.body.position.z += (data.z - pig.body.position.z) * 0.35;
+                        }
+                        if (data.facingAngle !== undefined) {
+                            pig.facingAngle = data.facingAngle;
                         }
                     }
                 });
@@ -4580,11 +4699,29 @@
                 applyBiomeTheme(serverPet.current_biome);
             }
             if (serverPet.unlocked_biomes) gameState.unlockedBiomes = serverPet.unlocked_biomes;
-            if (serverPet.ing_stock) gameState.ingStock = serverPet.ing_stock;
+            if (serverPet.ing_stock) gameState.ingStock = Object.assign({}, serverPet.ing_stock);
             if (serverPet.owned_toys) gameState.ownedToys = serverPet.owned_toys;
             if (serverPet.active_toys) gameState.activeToys = serverPet.active_toys;
             if (serverPet.upgrade_levels) gameState.upgradeLevels = serverPet.upgrade_levels;
-            if (serverPet.unlocked_recipes) gameState.unlockedRecipes = serverPet.unlocked_recipes;
+            if (serverPet.unlocked_recipes) {
+                gameState.unlockedRecipes = Object.assign(gameState.unlockedRecipes || {}, serverPet.unlocked_recipes);
+                if (typeof renderCodexModalList === 'function') renderCodexModalList();
+            }
+
+            if (serverPet.current_outfit !== undefined && serverPet.current_outfit !== gameState.currentOutfit) {
+                gameState.currentOutfit = serverPet.current_outfit;
+                if (pig) pig.setOutfit(gameState.currentOutfit);
+            }
+            if (serverPet.color && serverPet.color !== gameState.getActivePig().color) {
+                gameState.getActivePig().color = serverPet.color;
+                if (pig) pig.setSkinColor(serverPet.color);
+                if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
+            }
+            if (serverPet.pigs && Array.isArray(serverPet.pigs)) {
+                gameState.pigs = serverPet.pigs;
+                if (typeof PigManager !== 'undefined') PigManager.syncFromGameState(gameState.pigs);
+                if (typeof UIManager !== 'undefined') UIManager.renderPigRoster();
+            }
 
             updateHUD();
             syncTroughRecipeUI();
@@ -4633,6 +4770,28 @@
             // Smooth Camera Panning & Focusing
             if (typeof CameraManager !== 'undefined') {
                 CameraManager.update(dt);
+            }
+
+            // 即時小豬座標與拖拽同步 (廣播給同房夥伴)
+            if (typeof MultiplayerSync !== 'undefined' && pig) {
+                const isCarrying = interactionSession && interactionSession.mode === 'DRAGGING';
+                if (isCarrying) {
+                    MultiplayerSync.broadcastPigPosition({
+                        action: 'DRAGGING',
+                        x: pig.body.position.x,
+                        z: pig.body.position.z
+                    });
+                } else if (pig.body) {
+                    const horizSpeed = Math.hypot(pig.body.velocity.x, pig.body.velocity.z);
+                    if (horizSpeed > 0.35 && Math.floor(elapsed * 4) !== Math.floor((elapsed - dt) * 4)) {
+                        MultiplayerSync.broadcastPigPosition({
+                            action: 'WANDER',
+                            x: pig.body.position.x,
+                            z: pig.body.position.z,
+                            facingAngle: pig.facingAngle
+                        });
+                    }
+                }
             }
 
             // Sync Dynamic 3D Ingredients

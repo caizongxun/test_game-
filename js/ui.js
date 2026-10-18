@@ -134,6 +134,11 @@ const UIManager = {
 
         if (typeof showHUDToast === 'function') showHUDToast(`🎉 恭喜！新小豬【${name}】已成功加入牧場家族！`);
         if (typeof sfx !== 'undefined' && sfx.playVictoryFanfare) sfx.playVictoryFanfare();
+        if (typeof MultiplayerSync !== 'undefined') {
+            MultiplayerSync.recordAction('ADOPT_PIG', -cost, {
+                pigs: gameState.pigs
+            });
+        }
     },
 
     renderWardrobeModal() {
@@ -190,6 +195,12 @@ const UIManager = {
         this.renderWardrobeModal();
         if (typeof showHUDToast === 'function') showHUDToast(`👗 已為【${curPig.name}】換上新服裝！`);
         if (typeof sfx !== 'undefined' && sfx.playSoftTouch) sfx.playSoftTouch(480);
+        if (typeof MultiplayerSync !== 'undefined') {
+            MultiplayerSync.recordAction('CHANGE_OUTFIT', 0, {
+                current_outfit: outfitId,
+                owned_outfits: gameState.ownedOutfits
+            });
+        }
     },
 
     unequipOutfit() {
@@ -199,6 +210,12 @@ const UIManager = {
         if (inst) inst.setOutfit('none');
         saveGameState();
         this.renderWardrobeModal();
+        if (typeof MultiplayerSync !== 'undefined') {
+            MultiplayerSync.recordAction('CHANGE_OUTFIT', 0, {
+                current_outfit: 'none',
+                owned_outfits: gameState.ownedOutfits
+            });
+        }
     },
 
     buyOutfit(outfitId) {
@@ -225,6 +242,11 @@ const UIManager = {
         this.renderPigRoster();
         if (typeof showHUDToast === 'function') showHUDToast(`🎨 已將【${curPig.name}】毛色重新染色！`);
         if (typeof sfx !== 'undefined' && sfx.playSoftTouch) sfx.playSoftTouch(540);
+        if (typeof MultiplayerSync !== 'undefined') {
+            MultiplayerSync.recordAction('CHANGE_COLOR', 0, {
+                color: hexColor
+            });
+        }
     },
 
     bindEvents() {

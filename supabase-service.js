@@ -21,7 +21,8 @@
         stateUpdated: [],
         actionReceived: [],
         presenceUpdated: [],
-        connectionChanged: []
+        connectionChanged: [],
+        pigPositionReceived: []
     };
 
     function notify(event, data) {
@@ -239,7 +240,15 @@
             // 3. 廣播通道即時廣播 (無需等待 DB 寫入，毫秒級動作同步)
             .on('broadcast', { event: 'PET_INTERACTION' }, payload => {
                 if (payload.payload && payload.payload.sender !== playerName) {
-                    notify('actionReceived', payload.payload);
+                    const action = payload.payload;
+                    action.player_name = action.player_name || action.sender;
+                    notify('actionReceived', action);
+                }
+            })
+            // 即時小豬座標與目標導航同步
+            .on('broadcast', { event: 'PIG_SYNC' }, payload => {
+                if (payload.payload && payload.payload.sender !== playerName) {
+                    notify('pigPositionReceived', payload.payload);
                 }
             })
             .subscribe(status => {
@@ -306,6 +315,7 @@
                     event: 'PET_INTERACTION',
                     payload: {
                         sender: playerName,
+                        player_name: playerName,
                         action_type: actionType,
                         delta_coins: deltaCoins,
                         details: patchData
@@ -343,7 +353,20 @@
 
             // 若 RPC 尚未建立，退回直接安全 Update 表格
             console.warn('[Multiplayer] RPC apply_pet_action 不可用，使用直接 Update 回退:', error);
-            const directPatch = { ...patchData, updated_at: new Date().toISOString() };
+            const ALLOWED_PETS_COLUMNS = new Set([
+                'coins', 'name', 'weight', 'hunger', 'mood', 'energy', 'cleanliness',
+                'intimacy', 'intimacy_level', 'current_hat', 'current_biome',
+                'unlocked_biomes', 'ing_stock', 'owned_toys', 'active_toys',
+                'upgrade_levels', 'trough_mask', 'unlocked_recipes', 'equipped_weapon',
+                'equipped_shield', 'owned_equip', 'estate_levels', 'unlocked_stages',
+                'current_outfit', 'color', 'pigs'
+            ]);
+            const directPatch = { updated_at: new Date().toISOString() };
+            for (const key in patchData) {
+                if (ALLOWED_PETS_COLUMNS.has(key)) {
+                    directPatch[key] = patchData[key];
+                }
+            }
             if (deltaCoins !== 0) {
                 const { data: cur } = await supabaseClient.from('pets').select('coins').eq('room_code', currentRoomCode).maybeSingle();
                 if (cur) {
@@ -363,6 +386,30 @@
         } catch (err) {
             console.error('[Multiplayer] 執行伺服器同步動作失敗:', err);
             return { success: false, error: err };
+        }
+    }
+
+    // 實時小豬位置廣播 (頻率節流，毫秒級流暢同步)
+    let lastPigBroadcastTime = 0;
+    function broadcastPigPosition(posData) {
+        const now = performance.now();
+        if (now - lastPigBroadcastTime < 180) return; // 限制約 5 次/秒，符合 Realtime 配額
+        lastPigBroadcastTime = now;
+
+        if (roomSubscription && connectionStatus === 'CONNECTED') {
+            try {
+                roomSubscription.send({
+                    type: 'broadcast',
+                    event: 'PIG_SYNC',
+                    payload: {
+                        sender: playerName,
+                        player_name: playerName,
+                        ...posData
+                    }
+                });
+            } catch (e) {
+                // 靜默
+            }
         }
     }
 
@@ -420,6 +467,7 @@
     window.MultiplayerSync = {
         joinOrCreateRoom,
         recordAction,
+        broadcastPigPosition,
         syncIdleIncome,
         fetchRecentActions,
         generateRoomCode,

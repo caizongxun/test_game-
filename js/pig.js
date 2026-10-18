@@ -3,6 +3,44 @@
  * Module: js/pig.js
  */
 
+const PigGLBLoader = {
+    cachedScene: null,
+    isLoading: false,
+    callbacks: [],
+
+    load(onReady) {
+        if (this.cachedScene) {
+            onReady(this.cachedScene.clone(true));
+            return;
+        }
+        this.callbacks.push(onReady);
+        if (this.isLoading) return;
+        this.isLoading = true;
+
+        if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader !== 'undefined') {
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                'chibi-pink-pig.glb',
+                gltf => {
+                    this.cachedScene = gltf.scene;
+                    this.isLoading = false;
+                    while (this.callbacks.length > 0) {
+                        const cb = this.callbacks.shift();
+                        try { cb(this.cachedScene.clone(true)); } catch (e) { console.error('GLTF load callback error:', e); }
+                    }
+                },
+                undefined,
+                err => {
+                    console.warn('無法載入 chibi-pink-pig.glb，使用程序化模型降級:', err);
+                    this.isLoading = false;
+                }
+            );
+        } else {
+            console.warn('THREE.GLTFLoader 尚未就緒');
+        }
+    }
+};
+
 class PerVertexSoftBodyPig {
     constructor(pigData, initialPos = null) {
         this.pigData = pigData || gameState.getActivePig();
@@ -12,6 +50,9 @@ class PerVertexSoftBodyPig {
         this.visualGroup = new THREE.Group();
         this.root.add(this.visualGroup);
         scene.add(this.root);
+
+        this.proceduralPigGroup = new THREE.Group();
+        this.visualGroup.add(this.proceduralPigGroup);
 
         this.radius = 1.25;
         this.body = new CANNON.Body({
@@ -51,6 +92,8 @@ class PerVertexSoftBodyPig {
         this.buildCombatEquipMounts();
         this.build3DNameplate();
         this.build3DEmoteBubble();
+
+        this.loadGLBModel();
 
         // Apply visual customizations
         this.setSkinColor(this.pigData.color || '#ffb6c1');
@@ -167,7 +210,7 @@ class PerVertexSoftBodyPig {
         this.bodyMesh.castShadow = true;
         this.bodyMesh.receiveShadow = true;
         this.bodyMesh.userData = { interactType: 'PIG_SOFTBODY', pigInstance: this };
-        this.visualGroup.add(this.bodyMesh);
+        this.proceduralPigGroup.add(this.bodyMesh);
     }
 
     setSkinColor(hexColor) {
@@ -207,6 +250,20 @@ class PerVertexSoftBodyPig {
         }
         if (this.skinPartMat) {
             this.skinPartMat.color.set(hexColor);
+        }
+        if (this.glbRoot) {
+            this.glbRoot.traverse(child => {
+                if (child.isMesh && child.material) {
+                    const mName = child.material.name || '';
+                    if (mName === 'PigBodyPink' || child.name.includes('Torso') || child.name.includes('Head') || child.name.includes('Ear_Flap')) {
+                        child.material.color.set(hexColor);
+                        if (child.material.emissive) child.material.emissive.set(hexColor).multiplyScalar(0.12);
+                    } else if (mName === 'PigSnoutPink' || child.name.includes('Snout_Main')) {
+                        const snoutCol = cSkinBase.clone().offsetHSL(0, 0.1, -0.1);
+                        child.material.color.copy(snoutCol);
+                    }
+                }
+            });
         }
         this.updateNameplate();
     }
@@ -295,7 +352,7 @@ class PerVertexSoftBodyPig {
             eg.add(brow);
             if (idx === 0) this.leftBrow = brow; else this.rightBrow = brow;
 
-            this.visualGroup.add(eg);
+            this.proceduralPigGroup.add(eg);
         });
 
         this.leftEar = new THREE.Group();
@@ -321,7 +378,7 @@ class PerVertexSoftBodyPig {
             innerEar.rotation.x = 0.40;
             earGrp.add(innerEar);
 
-            this.visualGroup.add(earGrp);
+            this.proceduralPigGroup.add(earGrp);
         });
 
         this.legs = [];
@@ -352,7 +409,7 @@ class PerVertexSoftBodyPig {
                 legGrp.add(toe);
             });
 
-            this.visualGroup.add(legGrp);
+            this.proceduralPigGroup.add(legGrp);
             this.legs.push(legGrp);
         });
 
@@ -369,14 +426,14 @@ class PerVertexSoftBodyPig {
         const tailMesh = new THREE.Mesh(new THREE.TubeGeometry(tailCurve, 32, 0.054, 10, false), this.skinPartMat);
         tailMesh.castShadow = true;
         this.tailGroup.add(tailMesh);
-        this.visualGroup.add(this.tailGroup);
+        this.proceduralPigGroup.add(this.tailGroup);
 
         const wetSnoutMat = new THREE.MeshPhysicalMaterial({ color: 0xfb7185, roughness: 0.18, clearcoat: 0.85 });
         this.snoutTipMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.06, 24), wetSnoutMat);
         this.snoutTipMesh.rotation.x = Math.PI / 2 + 0.05;
         this.snoutTipMesh.position.set(0, 1.06, 1.48);
         this.snoutTipMesh.scale.set(1.15, 0.85, 1);
-        this.visualGroup.add(this.snoutTipMesh);
+        this.proceduralPigGroup.add(this.snoutTipMesh);
 
         this.hatMount = new THREE.Group();
         this.hatMount.position.set(0, 1.98, 0.72);
@@ -387,6 +444,63 @@ class PerVertexSoftBodyPig {
                 ch.userData = { interactType: 'PIG_SOFTBODY', pigInstance: this };
             }
         });
+    }
+
+    loadGLBModel() {
+        PigGLBLoader.load(clonedScene => {
+            if (!this.root || !this.visualGroup) return;
+            this.applyGLBModel(clonedScene);
+        });
+    }
+
+    applyGLBModel(glbScene) {
+        if (this.proceduralPigGroup) {
+            this.proceduralPigGroup.visible = false;
+        }
+
+        this.glbRoot = glbScene;
+        this.glbRoot.scale.set(1.0, 1.0, 1.0);
+        this.glbRoot.position.set(0, 1.05, 0);
+        this.visualGroup.add(this.glbRoot);
+
+        this.glbRoot.traverse(child => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+                if (child.material) {
+                    child.material = child.material.clone();
+                }
+                if (!child.userData.interactType) {
+                    child.userData = { interactType: 'PIG_SOFTBODY', pigInstance: this };
+                }
+            }
+        });
+
+        this.glbLegFL = this.glbRoot.getObjectByName('Front_Left_Leg_Group');
+        this.glbLegFR = this.glbRoot.getObjectByName('Front_Right_Leg_Group');
+        this.glbLegBL = this.glbRoot.getObjectByName('Back_Left_Leg_Group');
+        this.glbLegBR = this.glbRoot.getObjectByName('Back_Right_Leg_Group');
+        this.glbEarL  = this.glbRoot.getObjectByName('Left_Ear_Group');
+        this.glbEarR  = this.glbRoot.getObjectByName('Right_Ear_Group');
+        this.glbEyeL  = this.glbRoot.getObjectByName('Left_Eye');
+        this.glbEyeR  = this.glbRoot.getObjectByName('Right_Eye');
+        this.glbTail  = this.glbRoot.getObjectByName('Curly_Tail_Group');
+        this.glbSnout = this.glbRoot.getObjectByName('Snout_Group');
+
+        this.glbBaseRot = {
+            fl: this.glbLegFL ? this.glbLegFL.rotation.clone() : new THREE.Euler(),
+            fr: this.glbLegFR ? this.glbLegFR.rotation.clone() : new THREE.Euler(),
+            bl: this.glbLegBL ? this.glbLegBL.rotation.clone() : new THREE.Euler(),
+            br: this.glbLegBR ? this.glbLegBR.rotation.clone() : new THREE.Euler(),
+            earL: this.glbEarL ? this.glbEarL.rotation.clone() : new THREE.Euler(),
+            earR: this.glbEarR ? this.glbEarR.rotation.clone() : new THREE.Euler(),
+            tail: this.glbTail ? this.glbTail.rotation.clone() : new THREE.Euler()
+        };
+        this.glbBasePos = {
+            snout: this.glbSnout ? this.glbSnout.position.clone() : new THREE.Vector3()
+        };
+
+        this.setSkinColor(this.pigData.color || '#ffb6c1');
     }
 
     buildOutfitMount() {
@@ -889,6 +1003,9 @@ class PerVertexSoftBodyPig {
                 this.harvestTimer += dt;
                 // Foraging snout rooting animation
                 this.snoutTipMesh.position.y = 1.06 + Math.sin(this.harvestTimer * 12) * 0.12;
+                if (this.glbSnout && this.glbBasePos) {
+                    this.glbSnout.position.y = this.glbBasePos.snout.y + Math.sin(this.harvestTimer * 12) * 0.08;
+                }
                 if (this.harvestTimer >= 1.6) {
                     if (this.onHarvestDone) this.onHarvestDone();
                     this.aiState = 'WANDER';
@@ -938,13 +1055,38 @@ class PerVertexSoftBodyPig {
             this.legs[1].rotation.x = -Math.sin(this.walkCycle) * 0.35;
             this.legs[2].rotation.x = -Math.sin(this.walkCycle) * 0.35;
             this.legs[3].rotation.x = Math.sin(this.walkCycle) * 0.35;
+
+            if (this.glbLegFL && this.glbLegFR && this.glbLegBL && this.glbLegBR) {
+                this.glbLegFL.rotation.x = this.glbBaseRot.fl.x + Math.sin(this.walkCycle) * 0.45;
+                this.glbLegFR.rotation.x = this.glbBaseRot.fr.x - Math.sin(this.walkCycle) * 0.45;
+                this.glbLegBL.rotation.x = this.glbBaseRot.bl.x - Math.sin(this.walkCycle) * 0.45;
+                this.glbLegBR.rotation.x = this.glbBaseRot.br.x + Math.sin(this.walkCycle) * 0.45;
+                this.visualGroup.position.y = Math.abs(Math.sin(this.walkCycle * 2)) * 0.05;
+            }
         } else {
             this.legs.forEach(l => { l.rotation.x *= 0.85; });
+            if (this.glbLegFL && this.glbLegFR && this.glbLegBL && this.glbLegBR) {
+                this.glbLegFL.rotation.x = this.glbBaseRot.fl.x;
+                this.glbLegFR.rotation.x = this.glbBaseRot.fr.x;
+                this.glbLegBL.rotation.x = this.glbBaseRot.bl.x;
+                this.glbLegBR.rotation.x = this.glbBaseRot.br.x;
+                this.visualGroup.position.y = 0;
+            }
         }
 
         // Tail wag
         this.tailGroup.rotation.y = Math.sin(Date.now() * 0.007) * 0.32;
         this.tailGroup.rotation.z = Math.cos(Date.now() * 0.005) * 0.18;
+        if (this.glbTail && this.glbBaseRot) {
+            this.glbTail.rotation.y = this.glbBaseRot.tail.y + Math.sin(Date.now() * 0.008) * 0.35;
+        }
+
+        // Ear wiggles
+        if (this.glbEarL && this.glbEarR && this.glbBaseRot) {
+            const earSway = Math.sin(Date.now() * 0.004) * 0.08;
+            this.glbEarL.rotation.z = this.glbBaseRot.earL.z + earSway;
+            this.glbEarR.rotation.z = this.glbBaseRot.earR.z - earSway;
+        }
 
         // Blinking
         this.blinkTimer -= dt;
@@ -952,10 +1094,14 @@ class PerVertexSoftBodyPig {
             this.isBlinking = true;
             this.leftEyelid.rotation.x = 0;
             this.rightEyelid.rotation.x = 0;
+            if (this.glbEyeL) this.glbEyeL.scale.y = 0.1;
+            if (this.glbEyeR) this.glbEyeR.scale.y = 0.1;
             if (this.blinkTimer < -0.14) {
                 this.isBlinking = false;
                 this.leftEyelid.rotation.x = -Math.PI * 0.56;
                 this.rightEyelid.rotation.x = -Math.PI * 0.56;
+                if (this.glbEyeL) this.glbEyeL.scale.y = 1.0;
+                if (this.glbEyeR) this.glbEyeR.scale.y = 1.0;
                 this.blinkTimer = 2.5 + Math.random() * 3.5;
             }
         }
