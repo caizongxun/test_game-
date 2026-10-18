@@ -79,7 +79,18 @@ const PixelBattle = {
         });
     },
 
+    enter() {
+        this.startBattle(this.stage || 1);
+    },
+
+    exit() {
+        this.stopBattle();
+    },
+
     startBattle(stageNum = 1) {
+        if (!this.canvas) {
+            this.init();
+        }
         this.stage = Math.max(1, Math.min(10, stageNum));
         this.isActive = true;
 
@@ -90,12 +101,14 @@ const PixelBattle = {
         }
 
         this.resizeCanvas();
+        if (!this.canvas) return;
 
         // Calculate player stats from equipped gear & pig roster
         const curPig = (typeof gameState !== 'undefined') ? gameState.getActivePig() : null;
         let weaponAtk = 25;
+        const catalog = (typeof WEAPONS_CATALOG !== 'undefined') ? WEAPONS_CATALOG : (window.WEAPONS_CATALOG || []);
         if (curPig && curPig.equippedWeapon) {
-            const w = WEAPONS_CATALOG.find(x => x.id === curPig.equippedWeapon);
+            const w = catalog.find(x => x.id === curPig.equippedWeapon);
             if (w) weaponAtk = w.atkBonus || 25;
         }
 
@@ -104,7 +117,7 @@ const PixelBattle = {
         this.player.hp = this.player.maxHp;
         this.player.atk = weaponAtk;
         this.player.x = 100;
-        this.player.y = this.canvas.height * 0.5;
+        this.player.y = (this.canvas ? this.canvas.height : 500) * 0.5;
         this.player.vx = 0;
         this.player.vy = 0;
 
@@ -120,7 +133,10 @@ const PixelBattle = {
 
     stopBattle() {
         this.isActive = false;
-        if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
         const overlay = document.getElementById('pixel-battle-modal');
         if (overlay) {
             overlay.classList.remove('flex');
@@ -130,9 +146,9 @@ const PixelBattle = {
 
     resizeCanvas() {
         if (!this.canvas) return;
-        const rect = this.canvas.parentElement.getBoundingClientRect();
-        this.canvas.width = rect.width || 800;
-        this.canvas.height = rect.height || 500;
+        const rect = this.canvas.parentElement ? this.canvas.parentElement.getBoundingClientRect() : null;
+        this.canvas.width = (rect && rect.width > 0) ? Math.floor(rect.width) : (window.innerWidth || 800);
+        this.canvas.height = (rect && rect.height > 0) ? Math.floor(rect.height) : (window.innerHeight ? Math.floor(window.innerHeight * 0.7) : 500);
     },
 
     spawnStageEnemies() {
@@ -317,6 +333,7 @@ const PixelBattle = {
 
         for (let k = 0; k < 6; k++) {
             setTimeout(() => {
+                if (!this.isActive || !this.canvas) return;
                 const rx = 80 + Math.random() * (this.canvas.width - 160);
                 const ry = 80 + Math.random() * (this.canvas.height - 160);
                 for (let i = 0; i < 28; i++) {
@@ -447,6 +464,7 @@ const PixelBattle = {
     },
 
     update(dt) {
+        if (!this.isActive || !this.canvas) return;
         const p = this.player;
 
         // Player movement
@@ -544,6 +562,7 @@ const PixelBattle = {
     },
 
     render() {
+        if (!this.isActive || !this.canvas || !this.ctx) return;
         const ctx = this.ctx;
         const w = this.canvas.width;
         const h = this.canvas.height;

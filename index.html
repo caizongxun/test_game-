@@ -26,16 +26,16 @@
     <script src="supabase-service.js?v=20261018_v2"></script>
 
     <!-- Modular Game Systems -->
-    <script src="js/constants.js?v=20261018_v2"></script>
+    <script src="js/constants.js?v=20261018_v4"></script>
     <script src="js/state.js?v=20261018_v2"></script>
     <script src="js/camera.js?v=20261018_v2"></script>
     <script src="js/pig.js?v=20261018_v2"></script>
     <script src="js/interactions.js?v=20261018_v2"></script>
     <script src="js/farm.js?v=20261018_v3"></script>
     <script src="js/battle.js?v=20261018_v3"></script>
-    <script src="js/cheems.js?v=20261018_v3"></script>
-    <script src="js/pixel-battle.js?v=20261018_v3"></script>
-    <script src="js/ui.js?v=20261018_v3"></script>
+    <script src="js/cheems.js?v=20261018_v4"></script>
+    <script src="js/pixel-battle.js?v=20261018_v4"></script>
+    <script src="js/ui.js?v=20261018_v4"></script>
 
     <style>
         * {
@@ -432,6 +432,76 @@
                 </select>
                 <button class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:from-rose-400 text-white font-black text-xs shadow-lg transition animate-pulse" onclick="CheemsArena.summonPigsAssault()">
                     🐷 牧場群豬衝鋒圍攻
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2D Pixel Battle Roguelike Arena Modal -->
+    <div id="pixel-battle-modal" class="hidden fixed inset-0 z-40 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-between p-2 sm:p-4">
+        <!-- Top Status Bar -->
+        <div class="w-full max-w-5xl hud-glass rounded-2xl px-4 py-2 flex items-center justify-between shadow-2xl border border-white/20">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">⚔️</span>
+                <div>
+                    <div class="text-xs font-black text-amber-300">像素小豬大冒險 · Roguelike 戰鬥武鬥場</div>
+                    <div class="text-[10px] text-slate-300">
+                        電腦：<span class="text-amber-200">WASD 移動</span> · <span class="text-rose-300">[J] 三連擊</span> · <span class="text-sky-300">[K] 突刺</span> · <span class="text-yellow-300">[L] 震地</span> · <span class="text-pink-300">[;] 奧義</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs font-bold text-slate-200 transition" onclick="switchScene('ranch')">
+                    ✕ 返回牧場
+                </button>
+            </div>
+        </div>
+
+        <!-- Battle Canvas Viewport -->
+        <div class="relative w-full max-w-5xl flex-1 my-2 bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex items-center justify-center">
+            <canvas id="pixel-battle-canvas" class="w-full h-full block cursor-crosshair"></canvas>
+        </div>
+
+        <!-- Mobile Touch Controls (Visible on touch/small screens) -->
+        <div class="w-full max-w-5xl flex items-center justify-between px-2 py-1 md:hidden pointer-events-auto">
+            <!-- D-Pad Directional Arrows -->
+            <div class="grid grid-cols-3 gap-1 w-32 h-32">
+                <div></div>
+                <button class="bg-slate-800/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-white text-lg font-bold border border-slate-600 shadow"
+                    ontouchstart="PixelBattle.keys.KeyW=true" ontouchend="PixelBattle.keys.KeyW=false">▲</button>
+                <div></div>
+                <button class="bg-slate-800/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-white text-lg font-bold border border-slate-600 shadow"
+                    ontouchstart="PixelBattle.keys.KeyA=true" ontouchend="PixelBattle.keys.KeyA=false">◀</button>
+                <div></div>
+                <button class="bg-slate-800/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-white text-lg font-bold border border-slate-600 shadow"
+                    ontouchstart="PixelBattle.keys.KeyD=true" ontouchend="PixelBattle.keys.KeyD=false">▶</button>
+                <div></div>
+                <button class="bg-slate-800/90 active:bg-amber-500 rounded-xl flex items-center justify-center text-white text-lg font-bold border border-slate-600 shadow"
+                    ontouchstart="PixelBattle.keys.KeyS=true" ontouchend="PixelBattle.keys.KeyS=false">▼</button>
+                <div></div>
+            </div>
+
+            <!-- Action & Skill Buttons -->
+            <div class="flex items-center gap-2">
+                <button class="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 active:scale-95 text-white font-black text-xs flex flex-col items-center justify-center shadow-lg border border-rose-300"
+                    onclick="PixelBattle.triggerPlayerAttack()">
+                    <span>斬</span>
+                    <span class="text-[9px] font-normal">[J]</span>
+                </button>
+                <button class="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 active:scale-95 text-white font-black text-xs flex flex-col items-center justify-center shadow border border-sky-300"
+                    onclick="PixelBattle.triggerSkillK()">
+                    <span>刺</span>
+                    <span class="text-[9px] font-normal">[K]</span>
+                </button>
+                <button class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 active:scale-95 text-white font-black text-xs flex flex-col items-center justify-center shadow border border-amber-300"
+                    onclick="PixelBattle.triggerSkillL()">
+                    <span>震</span>
+                    <span class="text-[9px] font-normal">[L]</span>
+                </button>
+                <button class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 active:scale-95 text-white font-black text-xs flex flex-col items-center justify-center shadow border border-purple-300"
+                    onclick="PixelBattle.triggerSkillSemi()">
+                    <span>奧</span>
+                    <span class="text-[9px] font-normal">[;]</span>
                 </button>
             </div>
         </div>
@@ -5117,7 +5187,7 @@
             }
 
             // Update 2D Pixel Battle Roguelike Minigame
-            if (typeof PixelBattle !== 'undefined') {
+            if (typeof PixelBattle !== 'undefined' && PixelBattle.isActive && !PixelBattle.animFrameId) {
                 PixelBattle.update(dt);
             }
 
