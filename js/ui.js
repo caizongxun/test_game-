@@ -16,10 +16,13 @@ const UIManager = {
 
         gameState.pigs.forEach((p, idx) => {
             const isActive = idx === gameState.activePigIndex;
+            const itemContainer = document.createElement('div');
+            itemContainer.className = 'relative flex items-center group';
+
             const btn = document.createElement('button');
             btn.className = `p-1.5 rounded-2xl flex items-center gap-2 transition border ${
                 isActive
-                    ? 'bg-rose-500/20 border-rose-400 text-white shadow-md'
+                    ? 'bg-rose-500/25 border-rose-400 text-white shadow-md ring-1 ring-rose-400/50'
                     : 'bg-slate-900/80 border-slate-700 hover:border-slate-500 text-slate-300'
             }`;
 
@@ -36,7 +39,26 @@ const UIManager = {
             btn.addEventListener('click', () => {
                 this.selectActivePig(idx);
             });
-            rosterBar.appendChild(btn);
+            itemContainer.appendChild(btn);
+
+            // Delete / Release button (only if more than 1 pig exists)
+            if (gameState.pigs.length > 1) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-lg border border-rose-300 opacity-80 hover:opacity-100 transition z-10';
+                delBtn.title = `歡送【${p.name}】前往綠洲`;
+                delBtn.innerHTML = '✕';
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm(`確定要將小豬【${p.name}】歡送前往皇家綠洲度假嗎？`)) {
+                        if (typeof PigManager !== 'undefined') {
+                            PigManager.removePig(idx);
+                        }
+                    }
+                });
+                itemContainer.appendChild(delBtn);
+            }
+
+            rosterBar.appendChild(itemContainer);
         });
 
         // Add Pig Button

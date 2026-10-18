@@ -1,0 +1,27 @@
+<svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-md">
+            <!-- Stalk -->
+            <path d="M45 62 L48 96 C49 101 71 101 72 96 L75 62 Z" fill="#86efac" stroke="#15803d" stroke-width="2.5"/>
+            <!-- Fluffy Florets -->
+            <circle cx="36" cy="52" r="18" fill="#16a34a" stroke="#14532d" stroke-width="2.2"/>
+            <circle cx="84" cy="52" r="18" fill="#16a34a" stroke="#14532d" stroke-width="2.2"/>
+            <circle cx="48" cy="36" r="20" fill="#22c55e" stroke="#14532d" stroke-width="2.2"/>
+            <circle cx="72" cy="36" r="20" fill="#15803d" stroke="#14532d" stroke-width="2.2"/>
+            <circle cx="60" cy="48" r="22" fill="#22c55e" stroke="#14532d" stroke-width="2.2"/>
+            <!-- Face on Stalk -->
+            <g transform="translate(0, 21) scale(0.85)" transform-origin="60 58">
+              
+        <!-- Cute Chibi Eyes & Blush -->
+        <g class="chibi-2d-face">
+          <ellipse cx="46" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <ellipse cx="74" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <circle cx="48" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="46.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="49.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <circle cx="72" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="73.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <path d="M56 61 Q60 65 64 61" fill="none" stroke="#18181b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      
+            </g>
+          </svg>

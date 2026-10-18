@@ -1,0 +1,29 @@
+<svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-md">
+            <!-- Chubby Stalk -->
+            <path d="M43 58 C40 82 38 98 60 98 C82 98 80 82 77 58 Z" fill="#fef3c7" stroke="#b45309" stroke-width="2.5"/>
+            <!-- Red Cap -->
+            <path d="M20 58 C18 24 102 24 100 58 C100 66 20 66 20 58 Z" fill="#ef4444" stroke="#991b1b" stroke-width="2.5"/>
+            <!-- White Spots -->
+            <circle cx="42" cy="38" r="7" fill="#ffffff"/>
+            <circle cx="75" cy="36" r="8" fill="#ffffff"/>
+            <circle cx="60" cy="49" r="6" fill="#ffffff"/>
+            <circle cx="31" cy="52" r="5" fill="#ffffff"/>
+            <circle cx="87" cy="51" r="5.5" fill="#ffffff"/>
+            <!-- Face on Stalk -->
+            <g transform="translate(0, 19) scale(0.92)" transform-origin="60 58">
+              
+        <!-- Cute Chibi Eyes & Blush -->
+        <g class="chibi-2d-face">
+          <ellipse cx="46" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <ellipse cx="74" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <circle cx="48" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="46.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="49.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <circle cx="72" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="73.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <path d="M56 61 Q60 65 64 61" fill="none" stroke="#18181b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      
+            </g>
+          </svg>

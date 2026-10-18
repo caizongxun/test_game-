@@ -1,0 +1,29 @@
+<svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-md">
+            <defs>
+              <radialGradient id="g-truffle" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#475569"/>
+                <stop offset="55%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#090d16"/>
+              </radialGradient>
+            </defs>
+            <!-- Bumpy Truffle Silhouette -->
+            <path d="M60 22 C76 20 92 31 95 48 C99 64 90 86 74 93 C58 100 38 96 28 82 C18 68 22 44 34 32 C44 22 50 23 60 22 Z" fill="url(#g-truffle)" stroke="#020617" stroke-width="2.5"/>
+            <!-- Luxury Gold Veins & Bumps -->
+            <path d="M36 42 Q48 36 56 44 M68 34 Q78 40 82 50 M34 72 Q48 82 64 78" fill="none" stroke="#eab308" stroke-width="1.6" stroke-linecap="round" opacity="0.65"/>
+            <circle cx="48" cy="57" r="4.8" fill="#ffffff"/>
+            <circle cx="72" cy="57" r="4.8" fill="#ffffff"/>
+            
+        <!-- Cute Chibi Eyes & Blush -->
+        <g class="chibi-2d-face">
+          <ellipse cx="46" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <ellipse cx="74" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <circle cx="48" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="46.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="49.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <circle cx="72" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="73.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <path d="M56 61 Q60 65 64 61" fill="none" stroke="#18181b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      
+          </svg>

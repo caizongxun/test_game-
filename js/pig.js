@@ -106,6 +106,9 @@ class PerVertexSoftBodyPig {
         this.wanderTarget = new THREE.Vector3(startX, 0, startZ);
         this.wanderTimer = 1.5 + Math.random() * 2.5;
         this.walkCycle = Math.random() * 10;
+        this.smoothedSpeed = 0;
+        this.jiggleScale = new THREE.Vector3(1, 1, 1);
+        this.jiggleVel = new THREE.Vector3(0, 0, 0);
         this.happyTimer = 0;
         this.eatTimer = 0;
         this.blinkTimer = 2.0 + Math.random() * 2.0;
@@ -973,35 +976,40 @@ class PerVertexSoftBodyPig {
         }
     }
 
+    triggerSkinJiggle(intensity = 0.25) {
+        const amt = Math.min(0.2, Math.max(0.04, intensity));
+        this.jiggleVel.y -= amt * 5.5;
+        this.jiggleVel.x += amt * 3.5;
+        this.jiggleVel.z += amt * 3.5;
+    }
+
     pokeAtWorldPoint(worldPoint, worldNormal, strength = 0.36, tangentVel = null) {
-        const localPt = this.bodyMesh.worldToLocal(worldPoint.clone());
-        const invQuat = this.root.quaternion.clone().invert();
-        const localNormal = worldNormal.clone().applyQuaternion(invQuat).normalize();
-        const localTangent = tangentVel ? tangentVel.clone().applyQuaternion(invQuat) : null;
+        // Trigger gentle, subtle soft-body skin squish on 3D GLB model
+        this.triggerSkinJiggle(strength * 0.45);
 
-        const radius = 0.65;
-        for (let i = 0; i < this.vCount; i++) {
-            const rx = this.restPos[i * 3] - localPt.x;
-            const ry = this.restPos[i * 3 + 1] - localPt.y;
-            const rz = this.restPos[i * 3 + 2] - localPt.z;
-            const d = Math.hypot(rx, ry, rz);
+        if (this.proceduralPigGroup && this.proceduralPigGroup.visible && this.bodyMesh && this.restPos) {
+            const localPt = this.bodyMesh.worldToLocal(worldPoint.clone());
+            const invQuat = this.root.quaternion.clone().invert();
+            const localNormal = worldNormal.clone().applyQuaternion(invQuat).normalize();
+            const localTangent = tangentVel ? tangentVel.clone().applyQuaternion(invQuat) : null;
 
-            if (d < radius) {
-                const u = d / radius;
-                const profile = u < 0.55
-                    ? -Math.cos((u / 0.55) * Math.PI * 0.5)
-                    : 0.30 * Math.sin(((u - 0.55) / 0.45) * Math.PI);
-                const imp = profile * strength * this.softness[i] * 14.5;
+            const radius = 0.55;
+            for (let i = 0; i < this.vCount; i++) {
+                const rx = this.restPos[i * 3] - localPt.x;
+                const ry = this.restPos[i * 3 + 1] - localPt.y;
+                const rz = this.restPos[i * 3 + 2] - localPt.z;
+                const d = Math.hypot(rx, ry, rz);
 
-                this.vel[i * 3]     += localNormal.x * imp;
-                this.vel[i * 3 + 1] += localNormal.y * imp;
-                this.vel[i * 3 + 2] += localNormal.z * imp;
+                if (d < radius) {
+                    const u = d / radius;
+                    const profile = u < 0.55
+                        ? -Math.cos((u / 0.55) * Math.PI * 0.5)
+                        : 0.20 * Math.sin(((u - 0.55) / 0.45) * Math.PI);
+                    const imp = profile * strength * (this.softness ? this.softness[i] : 0.5) * 6.0;
 
-                if (localTangent) {
-                    const shear = Math.cos(u * Math.PI * 0.5) * this.softness[i] * 5.2;
-                    this.vel[i * 3]     += localTangent.x * shear;
-                    this.vel[i * 3 + 1] += localTangent.y * shear;
-                    this.vel[i * 3 + 2] += localTangent.z * shear;
+                    this.vel[i * 3]     += localNormal.x * imp;
+                    this.vel[i * 3 + 1] += localNormal.y * imp;
+                    this.vel[i * 3 + 2] += localNormal.z * imp;
                 }
             }
         }
@@ -1012,8 +1020,23 @@ class PerVertexSoftBodyPig {
 
         // Position synchronization
         this.root.position.copy(this.body.position);
+
+        // Organic spring physics for gentle petting squish feedback
+        const springK = 135.0;
+        const springDamp = 14.0;
+        this.jiggleVel.x += ((1.0 - this.jiggleScale.x) * springK - this.jiggleVel.x * springDamp) * dt;
+        this.jiggleVel.y += ((1.0 - this.jiggleScale.y) * springK - this.jiggleVel.y * springDamp) * dt;
+        this.jiggleVel.z += ((1.0 - this.jiggleScale.z) * springK - this.jiggleVel.z * springDamp) * dt;
+        this.jiggleScale.addScaledVector(this.jiggleVel, dt);
+
+        if (this.glbRoot) {
+            this.glbRoot.scale.set(this.jiggleScale.x, this.jiggleScale.y, this.jiggleScale.z);
+        }
+
         this.updateAIAndAnimation(dt);
-        this.updateSoftBodySimulation(dt);
+        if (this.proceduralPigGroup && this.proceduralPigGroup.visible) {
+            this.updateSoftBodySimulation(dt);
+        }
 
         if (this.emoteTimer > 0) {
             this.emoteTimer -= dt;
@@ -1026,6 +1049,7 @@ class PerVertexSoftBodyPig {
     updateAIAndAnimation(dt) {
         const vel = this.body.velocity;
         const horizSpeed = Math.hypot(vel.x, vel.z);
+        this.smoothedSpeed = THREE.MathUtils.lerp(this.smoothedSpeed || 0, horizSpeed, Math.min(1, dt * 6.0));
 
         // State Machine
         if (this.aiState === 'HARVEST' && this.harvestTarget) {
@@ -1033,15 +1057,15 @@ class PerVertexSoftBodyPig {
             const dist = toCrop.length();
             if (dist > 1.2) {
                 toCrop.normalize();
-                this.body.velocity.x = toCrop.x * 2.8;
-                this.body.velocity.z = toCrop.y * 2.8;
+                this.body.velocity.x += (toCrop.x * 2.8 - this.body.velocity.x) * Math.min(1, dt * 6.0);
+                this.body.velocity.z += (toCrop.y * 2.8 - this.body.velocity.z) * Math.min(1, dt * 6.0);
                 this.facingAngle = Math.atan2(toCrop.x, toCrop.y);
             } else {
-                this.body.velocity.x = 0;
-                this.body.velocity.z = 0;
+                this.body.velocity.x *= 0.8;
+                this.body.velocity.z *= 0.8;
                 this.harvestTimer += dt;
                 // Foraging snout rooting animation
-                this.snoutTipMesh.position.y = 1.06 + Math.sin(this.harvestTimer * 12) * 0.12;
+                if (this.snoutTipMesh) this.snoutTipMesh.position.y = 1.06 + Math.sin(this.harvestTimer * 12) * 0.12;
                 if (this.glbSnout && this.glbBasePos) {
                     this.glbSnout.position.y = this.glbBasePos.snout.y + Math.sin(this.harvestTimer * 12) * 0.08;
                 }
@@ -1058,8 +1082,8 @@ class PerVertexSoftBodyPig {
             const dist = toZone.length();
             if (dist > 1.4) {
                 toZone.normalize();
-                this.body.velocity.x = toZone.x * 2.4;
-                this.body.velocity.z = toZone.y * 2.4;
+                this.body.velocity.x += (toZone.x * 2.4 - this.body.velocity.x) * Math.min(1, dt * 6.0);
+                this.body.velocity.z += (toZone.y * 2.4 - this.body.velocity.z) * Math.min(1, dt * 6.0);
                 this.facingAngle = Math.atan2(toZone.x, toZone.y);
             } else {
                 this.targetZone = null;
@@ -1067,49 +1091,69 @@ class PerVertexSoftBodyPig {
         } else {
             this.wanderTimer -= dt;
             if (this.wanderTimer <= 0) {
-                this.wanderTimer = 2.0 + Math.random() * 3.5;
-                const r = 2.5 + Math.random() * 4.5;
+                this.wanderTimer = 3.0 + Math.random() * 4.0;
+                const r = 2.0 + Math.random() * 4.0;
                 const a = Math.random() * Math.PI * 2;
                 this.wanderTarget.set(Math.cos(a) * r, 0, Math.sin(a) * r);
             }
             const toWander = new THREE.Vector2(this.wanderTarget.x - this.body.position.x, this.wanderTarget.z - this.body.position.z);
-            if (toWander.length() > 0.8) {
+            const wDist = toWander.length();
+            if (wDist > 1.2) {
                 toWander.normalize();
-                this.body.velocity.x = toWander.x * 1.35;
-                this.body.velocity.z = toWander.y * 1.35;
-                this.facingAngle = Math.atan2(toWander.x, toWander.y);
+                this.body.velocity.x += (toWander.x * 1.35 - this.body.velocity.x) * Math.min(1, dt * 5.0);
+                this.body.velocity.z += (toWander.y * 1.35 - this.body.velocity.z) * Math.min(1, dt * 5.0);
+                if (this.smoothedSpeed > 0.25) {
+                    this.facingAngle = Math.atan2(toWander.x, toWander.y);
+                }
+            } else {
+                this.body.velocity.x *= 0.88;
+                this.body.velocity.z *= 0.88;
             }
         }
 
-        // Smooth rotation
+        // Smooth rotation (hysteresis against twitching)
         let angleDiff = this.facingAngle - this.root.rotation.y;
         while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
         while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-        this.root.rotation.y += angleDiff * Math.min(1, dt * 7.5);
+        this.root.rotation.y += angleDiff * Math.min(1, dt * 6.0);
 
-        // Trot leg cycle
-        if (horizSpeed > 0.3) {
-            this.walkCycle += dt * horizSpeed * 4.8;
-            this.legs[0].rotation.x = Math.sin(this.walkCycle) * 0.35;
-            this.legs[1].rotation.x = -Math.sin(this.walkCycle) * 0.35;
-            this.legs[2].rotation.x = -Math.sin(this.walkCycle) * 0.35;
-            this.legs[3].rotation.x = Math.sin(this.walkCycle) * 0.35;
+        // Smooth trotting leg cycle with hysteresis
+        const isMoving = this.smoothedSpeed > 0.22;
+        if (isMoving) {
+            this.walkCycle += dt * this.smoothedSpeed * 4.5;
+            const legAmp = Math.min(0.42, this.smoothedSpeed * 0.32);
 
-            if (this.glbLegFL && this.glbLegFR && this.glbLegBL && this.glbLegBR) {
-                this.glbLegFL.rotation.x = this.glbBaseRot.fl.x + Math.sin(this.walkCycle) * 0.45;
-                this.glbLegFR.rotation.x = this.glbBaseRot.fr.x - Math.sin(this.walkCycle) * 0.45;
-                this.glbLegBL.rotation.x = this.glbBaseRot.bl.x - Math.sin(this.walkCycle) * 0.45;
-                this.glbLegBR.rotation.x = this.glbBaseRot.br.x + Math.sin(this.walkCycle) * 0.45;
-                this.visualGroup.position.y = Math.abs(Math.sin(this.walkCycle * 2)) * 0.05;
+            if (this.legs && this.legs.length >= 4) {
+                this.legs[0].rotation.x = Math.sin(this.walkCycle) * legAmp;
+                this.legs[1].rotation.x = -Math.sin(this.walkCycle) * legAmp;
+                this.legs[2].rotation.x = -Math.sin(this.walkCycle) * legAmp;
+                this.legs[3].rotation.x = Math.sin(this.walkCycle) * legAmp;
+            }
+
+            if (this.glbLegFL && this.glbLegFR && this.glbLegBL && this.glbLegBR && this.glbBaseRot) {
+                const targetFL = this.glbBaseRot.fl.x + Math.sin(this.walkCycle) * legAmp;
+                const targetFR = this.glbBaseRot.fr.x - Math.sin(this.walkCycle) * legAmp;
+                const targetBL = this.glbBaseRot.bl.x - Math.sin(this.walkCycle) * legAmp;
+                const targetBR = this.glbBaseRot.br.x + Math.sin(this.walkCycle) * legAmp;
+
+                this.glbLegFL.rotation.x = THREE.MathUtils.lerp(this.glbLegFL.rotation.x, targetFL, Math.min(1, dt * 14.0));
+                this.glbLegFR.rotation.x = THREE.MathUtils.lerp(this.glbLegFR.rotation.x, targetFR, Math.min(1, dt * 14.0));
+                this.glbLegBL.rotation.x = THREE.MathUtils.lerp(this.glbLegBL.rotation.x, targetBL, Math.min(1, dt * 14.0));
+                this.glbLegBR.rotation.x = THREE.MathUtils.lerp(this.glbLegBR.rotation.x, targetBR, Math.min(1, dt * 14.0));
+
+                const bob = Math.abs(Math.sin(this.walkCycle * 2)) * 0.04;
+                this.visualGroup.position.y = THREE.MathUtils.lerp(this.visualGroup.position.y, bob, Math.min(1, dt * 10.0));
             }
         } else {
-            this.legs.forEach(l => { l.rotation.x *= 0.85; });
-            if (this.glbLegFL && this.glbLegFR && this.glbLegBL && this.glbLegBR) {
-                this.glbLegFL.rotation.x = this.glbBaseRot.fl.x;
-                this.glbLegFR.rotation.x = this.glbBaseRot.fr.x;
-                this.glbLegBL.rotation.x = this.glbBaseRot.bl.x;
-                this.glbLegBR.rotation.x = this.glbBaseRot.br.x;
-                this.visualGroup.position.y = 0;
+            if (this.legs && this.legs.length >= 4) {
+                this.legs.forEach(l => { l.rotation.x *= 0.85; });
+            }
+            if (this.glbLegFL && this.glbLegFR && this.glbLegBL && this.glbLegBR && this.glbBaseRot) {
+                this.glbLegFL.rotation.x = THREE.MathUtils.lerp(this.glbLegFL.rotation.x, this.glbBaseRot.fl.x, Math.min(1, dt * 8.0));
+                this.glbLegFR.rotation.x = THREE.MathUtils.lerp(this.glbLegFR.rotation.x, this.glbBaseRot.fr.x, Math.min(1, dt * 8.0));
+                this.glbLegBL.rotation.x = THREE.MathUtils.lerp(this.glbLegBL.rotation.x, this.glbBaseRot.bl.x, Math.min(1, dt * 8.0));
+                this.glbLegBR.rotation.x = THREE.MathUtils.lerp(this.glbLegBR.rotation.x, this.glbBaseRot.br.x, Math.min(1, dt * 8.0));
+                this.visualGroup.position.y = THREE.MathUtils.lerp(this.visualGroup.position.y, 0, Math.min(1, dt * 8.0));
             }
         }
 
@@ -1248,6 +1292,49 @@ const PigManager = {
         this.instances.push(newInst);
         newInst.showEmote('✨', 3.0);
         return newInst;
+    },
+
+    removePig(index) {
+        if (this.instances.length <= 1) {
+            if (typeof showHUDToast === 'function') showHUDToast('牧場至少需要保留一隻小豬夥伴！');
+            return false;
+        }
+        if (index < 0 || index >= this.instances.length) return false;
+        const [removedInst] = this.instances.splice(index, 1);
+        if (removedInst) removedInst.destroy();
+        if (gameState.pigs && gameState.pigs[index]) {
+            gameState.pigs.splice(index, 1);
+        }
+        if (gameState.activePigIndex >= this.instances.length) {
+            gameState.activePigIndex = this.instances.length - 1;
+        }
+        window.pig = this.getActivePigInstance();
+        if (typeof saveGameState === 'function') saveGameState();
+        if (typeof MultiplayerSync !== 'undefined') {
+            MultiplayerSync.recordAction('PIG_REMOVED', 0, { pigs: gameState.pigs });
+        }
+        if (typeof UIManager !== 'undefined' && UIManager.renderPigRoster) {
+            UIManager.renderPigRoster();
+            UIManager.selectActivePig(gameState.activePigIndex);
+        }
+        if (typeof showHUDToast === 'function') showHUDToast('👋 小豬已成功歡送前往皇家小豬綠洲度假！');
+        return true;
+    },
+
+    selectPig(indexOrId) {
+        let targetIdx = -1;
+        if (typeof indexOrId === 'number') {
+            targetIdx = indexOrId;
+        } else {
+            targetIdx = this.instances.findIndex(p => p.id === indexOrId || (p.pigData && p.pigData.id === indexOrId));
+        }
+        if (targetIdx >= 0 && targetIdx < this.instances.length) {
+            gameState.activePigIndex = targetIdx;
+            window.pig = this.instances[targetIdx];
+            if (typeof UIManager !== 'undefined' && UIManager.selectActivePig) {
+                UIManager.selectActivePig(targetIdx);
+            }
+        }
     },
 
     update(dt) {

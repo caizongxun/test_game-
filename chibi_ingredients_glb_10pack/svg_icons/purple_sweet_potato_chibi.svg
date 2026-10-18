@@ -1,0 +1,30 @@
+<svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-md">
+            <defs>
+              <linearGradient id="g-potato" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#c084fc"/>
+                <stop offset="50%" stop-color="#9333ea"/>
+                <stop offset="100%" stop-color="#581c87"/>
+              </linearGradient>
+            </defs>
+            <!-- Plump Curved Sweet Potato -->
+            <path d="M65 18 C82 24 90 50 84 74 C78 96 58 104 46 98 C34 92 32 70 38 48 C44 28 52 14 65 18 Z" fill="url(#g-potato)" stroke="#4c1d95" stroke-width="2.5"/>
+            <!-- Golden Honey Tip -->
+            <ellipse cx="63" cy="22" rx="6" ry="3.5" transform="rotate(15 63 22)" fill="#facc15" stroke="#a16207" stroke-width="1.5"/>
+            <!-- Dimples -->
+            <circle cx="48" cy="40" r="1.8" fill="#4c1d95" opacity="0.6"/>
+            <circle cx="74" cy="78" r="2" fill="#4c1d95" opacity="0.6"/>
+            
+        <!-- Cute Chibi Eyes & Blush -->
+        <g class="chibi-2d-face">
+          <ellipse cx="46" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <ellipse cx="74" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <circle cx="48" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="46.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="49.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <circle cx="72" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="73.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <path d="M56 61 Q60 65 64 61" fill="none" stroke="#18181b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      
+          </svg>

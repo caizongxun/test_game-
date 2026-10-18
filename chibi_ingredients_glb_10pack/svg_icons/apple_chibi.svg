@@ -1,0 +1,29 @@
+<svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-md">
+            <defs>
+              <radialGradient id="g-apple" cx="38%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#ff7b7b"/>
+                <stop offset="45%" stop-color="#ef4444"/>
+                <stop offset="100%" stop-color="#b91c1c"/>
+              </radialGradient>
+            </defs>
+            <!-- Stem & Leaf -->
+            <path d="M59 30 Q61 17 67 14" fill="none" stroke="#78350f" stroke-width="5" stroke-linecap="round"/>
+            <path d="M62 24 C74 14 88 20 82 31 C75 37 65 32 62 24 Z" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
+            <!-- Chibi Apple Body -->
+            <path d="M60 30 C42 24 24 38 25 62 C26 86 43 99 55 96 C58 95 62 95 65 96 C77 99 94 86 95 62 C96 38 78 24 60 30 Z" fill="url(#g-apple)" stroke="#991b1b" stroke-width="2.5"/>
+            <ellipse cx="39" cy="46" rx="7" ry="11" transform="rotate(-25 39 46)" fill="#ffffff" opacity="0.35"/>
+            
+        <!-- Cute Chibi Eyes & Blush -->
+        <g class="chibi-2d-face">
+          <ellipse cx="46" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <ellipse cx="74" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <circle cx="48" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="46.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="49.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <circle cx="72" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="73.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <path d="M56 61 Q60 65 64 61" fill="none" stroke="#18181b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      
+          </svg>

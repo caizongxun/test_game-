@@ -31,9 +31,11 @@
     <script src="js/camera.js?v=20261018_v2"></script>
     <script src="js/pig.js?v=20261018_v2"></script>
     <script src="js/interactions.js?v=20261018_v2"></script>
-    <script src="js/farm.js?v=20261018_v2"></script>
-    <script src="js/battle.js?v=20261018_v2"></script>
-    <script src="js/ui.js?v=20261018_v2"></script>
+    <script src="js/farm.js?v=20261018_v3"></script>
+    <script src="js/battle.js?v=20261018_v3"></script>
+    <script src="js/cheems.js?v=20261018_v3"></script>
+    <script src="js/pixel-battle.js?v=20261018_v3"></script>
+    <script src="js/ui.js?v=20261018_v3"></script>
 
     <style>
         * {
@@ -221,6 +223,105 @@
     <!-- Floating Dynamic Feedback Container -->
     <div id="feedback-layer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
 
+    <!-- Floating Scene Nav Bar -->
+    <nav id="scene-nav-bar" class="fixed top-2.5 left-1/2 -translate-x-1/2 z-30 hud-glass rounded-full px-2.5 py-1 flex items-center gap-1.5 shadow-2xl border border-white/20">
+        <button id="nav-btn-ranch" class="scene-tab-btn active px-3 py-1 rounded-full text-xs font-black transition">🏡 牧場</button>
+        <button id="nav-btn-farm" class="scene-tab-btn px-3 py-1 rounded-full text-xs font-black transition">🌾 莊園</button>
+        <button id="nav-btn-cheems" class="scene-tab-btn px-3 py-1 rounded-full text-xs font-black transition">🐸 紓壓蛙</button>
+        <button id="nav-btn-pixel" class="scene-tab-btn px-3 py-1 rounded-full text-xs font-black transition text-amber-300">⚔️ 像素冒險</button>
+    </nav>
+
+    <!-- Dedicated Farmland 3D Scene Overlay -->
+    <div id="farm-scene-overlay" class="hidden fixed inset-x-3 top-16 z-20 pointer-events-none flex flex-col justify-between max-w-4xl mx-auto">
+        <div class="pointer-events-auto hud-glass rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+            <div class="flex items-center gap-2">
+                <span class="text-base">🌾</span>
+                <div>
+                    <div class="text-xs font-black text-amber-300">皇家莊園農田工坊</div>
+                    <div class="text-[10px] text-slate-300">已開墾地塊：<span id="farm-hud-plot-count" class="text-emerald-400 font-bold">2 塊</span> · 下一地塊費用：<span id="farm-hud-next-cost" class="text-amber-400 font-bold">500c</span></div>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-700">
+                <button class="farm-tool-btn px-2.5 py-1 rounded-lg text-xs font-bold transition bg-amber-500 text-slate-950 shadow" onclick="FarmSystem.setActiveTool('SEED')">🌰 播種</button>
+                <button class="farm-tool-btn px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white" onclick="FarmSystem.setActiveTool('WATER')">💧 澆水</button>
+                <button class="farm-tool-btn px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white" onclick="FarmSystem.setActiveTool('SCYTHE')">🌾 鐮刀</button>
+                <button class="farm-tool-btn px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-300 hover:text-white" onclick="FarmSystem.setActiveTool('FERTILIZE')">⚡ 催熟</button>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <select id="farm-hud-seed-select" class="bg-slate-950 border border-slate-700 text-xs rounded-xl p-1.5 text-white" onchange="FarmSystem.selectedSeedId = this.value">
+                    <option value="seed_A">🍎 蘋果苗 (15c · 35s)</option>
+                    <option value="seed_B">🥕 胡蘿蔔種 (20c · 45s)</option>
+                    <option value="seed_C">🌽 玉米種子 (30c · 55s)</option>
+                    <option value="seed_D">🎃 南瓜種子 (45c · 70s)</option>
+                    <option value="seed_E">🍄 紅傘菇菌 (65c · 90s)</option>
+                    <option value="seed_F">🌰 橡樹種苗 (90c · 110s)</option>
+                    <option value="seed_G">🍉 西瓜種子 (125c · 140s)</option>
+                    <option value="seed_H">🍠 紫番薯苗 (170c · 170s)</option>
+                    <option value="seed_I">🥦 花椰菜種 (230c · 210s)</option>
+                    <option value="seed_J">🪙 黑松露核 (380c · 260s)</option>
+                </select>
+                <button class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 text-slate-950 font-black text-xs transition shadow" onclick="FarmSystem.buyNextPlot()">
+                    ➕ 開墾新地塊
+                </button>
+            </div>
+        </div>
+        <div class="pointer-events-auto mt-2 flex flex-wrap items-center justify-between gap-2 hud-glass rounded-xl p-2 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-300">⚙️ 莊園自動化裝置：</span>
+                <button id="btn-buy-auto-sower" class="px-2.5 py-1 rounded-lg bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 font-bold hover:bg-indigo-500/40 transition" onclick="FarmSystem.buyAutomation('autoSower')">🤖 自動播種機 (2500c)</button>
+                <button id="btn-buy-auto-sprinkler" class="px-2.5 py-1 rounded-lg bg-sky-500/25 border border-sky-400/40 text-sky-200 font-bold hover:bg-sky-500/40 transition" onclick="FarmSystem.buyAutomation('autoSprinkler')">🌧️ 噴水系統 (3800c)</button>
+                <button id="btn-buy-auto-harvester" class="px-2.5 py-1 rounded-lg bg-amber-500/25 border border-amber-400/40 text-amber-200 font-bold hover:bg-amber-500/40 transition" onclick="FarmSystem.buyAutomation('autoHarvester')">🚜 小豬收割車 (5500c)</button>
+            </div>
+            <button class="px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black transition shadow" onclick="FarmSystem.sellAllSurplusProduce()">
+                💰 批發賣出盈餘作物
+            </button>
+        </div>
+    </div>
+
+    <!-- Cheems Frog Stress-Relief Arena Overlay -->
+    <div id="cheems-arena-overlay" class="hidden fixed inset-x-3 top-16 z-20 pointer-events-none flex flex-col justify-between max-w-3xl mx-auto">
+        <div class="pointer-events-auto hud-glass rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-2xl">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl animate-bounce">🐸</span>
+                <div>
+                    <div class="text-xs font-black text-rose-300">Cheems 蛙勇士解壓武道場</div>
+                    <div class="text-[10px] text-slate-300">點擊青蛙打擊抒壓！累計痛擊：<span id="cheems-bonk-count" class="text-amber-400 font-black text-xs">0</span> 次 · 賺取金幣：<span id="cheems-coin-earned" class="text-emerald-400 font-black text-xs">0</span>c</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="cheems-weapon-select" class="bg-slate-950 border border-slate-700 text-xs rounded-xl p-1.5 text-amber-200 font-bold" onchange="CheemsArena.equipWeapon(this.value)">
+                    <option value="spiked_club">狼牙大棒棒 (+12)</option>
+                    <option value="squeaky_hammer">玩具尖叫充氣槌 (+8)</option>
+                    <option value="giant_fish">生猛大鹹魚 (+15)</option>
+                    <option value="rubber_chicken">魔音尖叫慘叫雞 (+10)</option>
+                    <option value="golden_brick">皇家九九純金磚 (+28)</option>
+                    <option value="feather_duster">阿嬤的愛心雞毛撢子 (+9)</option>
+                    <option value="giant_leek">蔥哥特級大青蔥 (+14)</option>
+                    <option value="rolled_newspaper">實心卷筒報紙 (+7)</option>
+                    <option value="frying_pan">平底鑄鐵不沾鍋 (+20)</option>
+                    <option value="toilet_plunger">馬桶疏通黃金吸盤 (+11)</option>
+                    <option value="bamboo_sword">童年竹劍 (+16)</option>
+                    <option value="foam_boxing_glove">海綿巨型拳擊手套 (+18)</option>
+                    <option value="slipper_slap">萬用打蟑螂藍白拖 (+22)</option>
+                    <option value="feather_fan">諸葛孔明鵝毛羽扇 (+8)</option>
+                    <option value="wooden_bat">熱血少年木棒 (+17)</option>
+                    <option value="giant_corn_cob">超硬黃金老玉米棒 (+13)</option>
+                    <option value="electric_fly_swatter">高壓電蚊拍 (+19)</option>
+                    <option value="pillow_whack">鵝絨軟綿大抱枕 (+6)</option>
+                    <option value="balloon_sword">彩色充氣氣球劍 (+5)</option>
+                    <option value="magic_wand">魔法少女心心法杖 (+24)</option>
+                    <option value="lollipop_hammer">五彩巨型波羅棒棒糖 (+12)</option>
+                    <option value="umbrella_rapier">紳士晴雨西洋傘 (+15)</option>
+                    <option value="frozen_tuna">零下50度急凍黑鮪魚 (+32)</option>
+                    <option value="ultimate_bonk_gavel">法官天譴正義大木槌 (+40)</option>
+                </select>
+                <button class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 hover:from-rose-400 text-white font-black text-xs shadow-lg transition animate-pulse" onclick="CheemsArena.summonPigsAssault()">
+                    🐷 牧場群豬衝鋒圍攻
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== DESKTOP UI (md and above) ==================== -->
     <aside id="desktop-left-panel" class="hidden md:block fixed top-3 left-3 z-20 w-84 hud-glass rounded-2xl p-3.5 transition-all">
         <!-- Multi-Pig Roster Bar -->
@@ -262,43 +363,54 @@
             </span>
         </div>
 
-        <!-- 4 Vital Status Bars -->
-        <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-2.5 text-[11px]">
-            <div>
-                <div class="flex justify-between text-slate-300 mb-0.5">
-                    <span>飽足感</span>
-                    <span id="label-hunger" class="font-bold text-amber-300">80%</span>
+        <!-- 4 Vital Status Circular Rings -->
+        <div class="flex items-center justify-between gap-1.5 mt-2 pt-2 border-t border-slate-700/60">
+            <!-- Hunger Ring -->
+            <div class="flex flex-col items-center">
+                <div class="relative w-11 h-11 flex items-center justify-center">
+                    <svg class="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" class="stroke-slate-800" stroke-width="3"></circle>
+                        <circle id="ring-hunger" cx="18" cy="18" r="14" fill="none" class="stroke-amber-400 transition-all duration-300" stroke-width="3" stroke-dasharray="88" stroke-dashoffset="18" stroke-linecap="round"></circle>
+                    </svg>
+                    <span id="label-hunger" class="absolute text-[10px] font-black text-amber-300">80%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div id="bar-hunger" class="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-300" style="width: 80%"></div>
-                </div>
+                <span class="text-[9px] font-bold text-slate-400 mt-0.5">🍖 飽足</span>
             </div>
-            <div>
-                <div class="flex justify-between text-slate-300 mb-0.5">
-                    <span>心情值</span>
-                    <span id="label-mood" class="font-bold text-pink-300">85%</span>
+
+            <!-- Mood Ring -->
+            <div class="flex flex-col items-center">
+                <div class="relative w-11 h-11 flex items-center justify-center">
+                    <svg class="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" class="stroke-slate-800" stroke-width="3"></circle>
+                        <circle id="ring-mood" cx="18" cy="18" r="14" fill="none" class="stroke-pink-400 transition-all duration-300" stroke-width="3" stroke-dasharray="88" stroke-dashoffset="14" stroke-linecap="round"></circle>
+                    </svg>
+                    <span id="label-mood" class="absolute text-[10px] font-black text-pink-300">85%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div id="bar-mood" class="h-full bg-gradient-to-r from-pink-500 to-rose-400 rounded-full transition-all duration-300" style="width: 85%"></div>
-                </div>
+                <span class="text-[9px] font-bold text-slate-400 mt-0.5">💖 心情</span>
             </div>
-            <div>
-                <div class="flex justify-between text-slate-300 mb-0.5">
-                    <span>活力值</span>
-                    <span id="label-energy" class="font-bold text-indigo-300">90%</span>
+
+            <!-- Energy Ring -->
+            <div class="flex flex-col items-center">
+                <div class="relative w-11 h-11 flex items-center justify-center">
+                    <svg class="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" class="stroke-slate-800" stroke-width="3"></circle>
+                        <circle id="ring-energy" cx="18" cy="18" r="14" fill="none" class="stroke-indigo-400 transition-all duration-300" stroke-width="3" stroke-dasharray="88" stroke-dashoffset="9" stroke-linecap="round"></circle>
+                    </svg>
+                    <span id="label-energy" class="absolute text-[10px] font-black text-indigo-300">90%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div id="bar-energy" class="h-full bg-gradient-to-r from-indigo-500 to-sky-400 rounded-full transition-all duration-300" style="width: 90%"></div>
-                </div>
+                <span class="text-[9px] font-bold text-slate-400 mt-0.5">⚡ 活力</span>
             </div>
-            <div>
-                <div class="flex justify-between text-slate-300 mb-0.5">
-                    <span>清潔度</span>
-                    <span id="label-clean" class="font-bold text-sky-300">92%</span>
+
+            <!-- Clean Ring -->
+            <div class="flex flex-col items-center">
+                <div class="relative w-11 h-11 flex items-center justify-center">
+                    <svg class="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" class="stroke-slate-800" stroke-width="3"></circle>
+                        <circle id="ring-clean" cx="18" cy="18" r="14" fill="none" class="stroke-sky-400 transition-all duration-300" stroke-width="3" stroke-dasharray="88" stroke-dashoffset="7" stroke-linecap="round"></circle>
+                    </svg>
+                    <span id="label-clean" class="absolute text-[10px] font-black text-sky-300">92%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div id="bar-clean" class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 rounded-full transition-all duration-300" style="width: 92%"></div>
-                </div>
+                <span class="text-[9px] font-bold text-slate-400 mt-0.5">🫧 清潔</span>
             </div>
         </div>
 
@@ -409,11 +521,6 @@
                 <option value="bell">配飾：皇家領結金鈴鐺</option>
                 <option value="wizard">魔幻：星宿大巫師帽</option>
             </select>
-
-            <!-- Save Modal Button -->
-            <button id="btn-open-share" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600/70 font-semibold text-xs transition">
-                存檔
-            </button>
 
             <!-- Audio Toggle Button -->
             <button id="btn-sound-toggle" title="切換音效" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600/60 transition">
@@ -563,22 +670,8 @@
                     <option value="wizard">魔幻：星宿大巫師帽</option>
                 </select>
                 <button id="m-btn-coop" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 text-xs font-semibold">共養中心</button>
-                <button id="m-btn-save" class="px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-600 text-slate-200 text-xs font-semibold">存檔管理</button>
             </div>
         </div>
-    </div>
-
-    <!-- Floating Camera Control D-Pad & Focus Widget -->
-    <div id="camera-control-widget" class="fixed right-3 bottom-16 md:bottom-5 z-20 flex flex-col items-center gap-1 bg-slate-900/85 backdrop-blur-md p-2 rounded-2xl border border-slate-700/80 shadow-2xl">
-        <div class="text-[10px] font-bold text-slate-400">視角平移</div>
-        <button id="btn-cam-pan-up" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">⬆️</button>
-        <div class="flex items-center gap-1">
-            <button id="btn-cam-pan-left" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">⬅️</button>
-            <button id="btn-cam-focus-pig" title="聚焦小豬" class="w-8 h-8 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center justify-center transition shadow">🐷</button>
-            <button id="btn-cam-pan-right" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">➡️</button>
-        </div>
-        <button id="btn-cam-pan-down" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm flex items-center justify-center transition border border-slate-600">⬇️</button>
-        <button id="btn-cam-reset-overview" class="mt-0.5 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 font-bold border border-slate-700 transition">全景</button>
     </div>
 
     <!-- Mobile Bottom Tab Bar -->
@@ -1405,6 +1498,25 @@
                     osc.stop(now + idx * 0.11 + 0.34);
                 });
             }
+            playCoinDing() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [987.77, 1318.51].forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.001, now + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.18, now + idx * 0.08 + 0.015);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.3);
+                });
+            }
         }
         const sfx = new SoundFX();
 
@@ -2135,6 +2247,28 @@
                     break;
                 }
             }
+
+            // Asynchronously load the official chibi 3D GLB model and replace procedural fallback
+            if (typeof IngredientGLBLoader !== 'undefined') {
+                IngredientGLBLoader.load(code, glbScene => {
+                    if (glbScene && group) {
+                        while (group.children.length > 0) group.remove(group.children[0]);
+                        glbScene.scale.set(0.35, 0.35, 0.35);
+                        glbScene.position.set(0, 0, 0);
+                        glbScene.traverse(ch => {
+                            if (ch.isMesh) {
+                                ch.castShadow = true;
+                                ch.receiveShadow = true;
+                                if (group.userData && group.userData.interactType) {
+                                    ch.userData = { ...group.userData };
+                                }
+                            }
+                        });
+                        group.add(glbScene);
+                    }
+                });
+            }
+
             return group;
         }
 
@@ -2892,19 +3026,20 @@
         }
 
         function activatePigCarrySession(session) {
-            if (!pig) return;
+            const curPig = session.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+            if (!curPig) return;
             hideHoldRing();
             session.mode = 'CARRY_PIG';
-            pig.aiState = 'DRAGGED';
-            pig.targetZone = null;
+            curPig.aiState = 'DRAGGED';
+            curPig.targetZone = null;
             dragPlane.constant = -1.35;
 
             // Start simultaneous soft-body vertex grip at the exact grabbed location
-            pig.startPinchAtWorldPoint(session.initialHitPoint);
-            pig.updatePinchWorldTarget(session.initialHitPoint.clone().add(new THREE.Vector3(0, 0.42, 0)));
+            curPig.startPinchAtWorldPoint(session.initialHitPoint);
+            curPig.updatePinchWorldTarget(session.initialHitPoint.clone().add(new THREE.Vector3(0, 0.42, 0)));
 
             sfx.playSnort();
-            spawnFloatingText('已抓起小豬（拖動可移至各區域）', pig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#f472b6');
+            spawnFloatingText(`已抓起【${curPig.pigData ? curPig.pigData.name : '小豬'}】（拖動可移至各區域）`, curPig.root.position.clone().add(new THREE.Vector3(0, 2.5, 0)), '#f472b6');
         }
 
         function onCanvasPointerDown(e) {
@@ -2918,21 +3053,49 @@
                 const hit = hits[i];
                 const uData = hit.object.userData || (hit.object.parent && hit.object.parent.userData) || {};
 
-                // 1. Pointer Down on the Soft-Body Pig
-                if (uData.interactType === 'PIG_SOFTBODY' && pig) {
+                // 1. Pointer Down on Cheems Frog in Stress Arena
+                if (uData.interactType === 'CHEEMS_TARGET' && typeof CheemsArena !== 'undefined') {
+                    CheemsArena.strikeCheems(1.0);
+                    return;
+                }
+
+                // 2. Pointer Down on Farm Plot / Expand Sign / Farm Tool
+                if (uData.interactType === 'FARM_PLOT' && typeof FarmSystem !== 'undefined') {
+                    FarmSystem.handlePlotInteraction(uData.plotIndex);
+                    return;
+                }
+                if (uData.interactType === 'FARM_EXPAND_SIGN' && typeof FarmSystem !== 'undefined') {
+                    FarmSystem.buyNextPlot();
+                    return;
+                }
+                if (uData.interactType === 'FARM_TOOL' && typeof FarmSystem !== 'undefined') {
+                    FarmSystem.setActiveTool(uData.toolId);
+                    return;
+                }
+
+                // 3. Pointer Down on the Soft-Body Pig
+                if (uData.interactType === 'PIG_SOFTBODY') {
+                    const targetPig = uData.pigInstance || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+                    if (!targetPig) return;
                     controls.enabled = false;
                     const hitPt = hit.point.clone();
                     const hitNormal = hit.face
                         ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
                         : new THREE.Vector3(0, 1, 0);
 
-                    // Immediate soft touch dimple feedback on contact
-                    pig.pokeAtWorldPoint(hitPt, hitNormal, 0.28);
+                    // Immediate soft touch feedback on contact
+                    targetPig.pokeAtWorldPoint(hitPt, hitNormal, 0.28);
                     lastRubWorldPt = hitPt.clone();
                     sfx.playSoftTouch(440);
 
+                    // Select this specific pig in manager & UI
+                    if (uData.pigInstance && typeof PigManager !== 'undefined') {
+                        PigManager.selectPig(uData.pigInstance.id || uData.pigInstance);
+                    }
+
                     interactionSession = {
                         mode: 'HOLD_PENDING',
+                        targetPig: targetPig,
                         startTime: performance.now(),
                         startScreen: { x: e.clientX, y: e.clientY },
                         currentScreen: { x: e.clientX, y: e.clientY },
@@ -2942,22 +3105,33 @@
                     return;
                 }
 
-                // 2. Pointer Down on an Ingredient on the 3D Wooden Pantry Stand
+                // 4. Pointer Down on an Ingredient on the 3D Wooden Pantry Stand
                 if (uData.interactType === 'PANTRY_ING' && uData.ingCode) {
                     controls.enabled = false;
                     const spawned = spawnIngredient3D(uData.ingCode, hit.point.clone().add(new THREE.Vector3(0, 0.3, 0)), false);
                     if (spawned) {
-                        dragPlane.constant = -1.35;
+                        dragPlane.constant = -1.5;
+                        if (spawned.body) {
+                            spawned.body.type = CANNON.Body.KINEMATIC;
+                            spawned.body.velocity.set(0, 0, 0);
+                            spawned.body.angularVelocity.set(0, 0, 0);
+                        }
                         interactionSession = { mode: 'DRAG_ITEM', item: spawned };
                     }
                     return;
                 }
 
-                // 3. Pointer Down on a 3D Physics Ingredient or Toy in the scene
+                // 5. Pointer Down on a 3D Physics Ingredient or Toy in the scene
                 if ((uData.interactType === 'INGREDIENT' || uData.interactType === 'TOY') && uData.ref) {
                     controls.enabled = false;
-                    dragPlane.constant = -1.15;
-                    interactionSession = { mode: 'DRAG_ITEM', item: uData.ref };
+                    dragPlane.constant = -1.5;
+                    const item = uData.ref;
+                    if (item.body) {
+                        item.body.type = CANNON.Body.KINEMATIC;
+                        item.body.velocity.set(0, 0, 0);
+                        item.body.angularVelocity.set(0, 0, 0);
+                    }
+                    interactionSession = { mode: 'DRAG_ITEM', item: item };
                     sfx.playSoftTouch(390);
                     return;
                 }
@@ -2973,7 +3147,7 @@
             const screenSpeed = Math.hypot(dxScreen, dyScreen);
             lastRubScreenPt = { x: e.clientX, y: e.clientY };
 
-            // CASE A: No active click/touch session -> Desktop Hover-Slide Rubbing (電腦滑鼠不點擊快速滑動撫摸)
+            // CASE A: No active click/touch session -> Desktop Hover-Slide Rubbing
             if (!interactionSession) {
                 const hits = raycaster.intersectObjects(scene.children, true);
                 let hoveredClickable = false;
@@ -2994,14 +3168,15 @@
             }
 
             // CASE B: Waiting for Long-Press vs Rapid Swipe/Circle on Pig
-            if (interactionSession.mode === 'HOLD_PENDING' && pig) {
+            if (interactionSession.mode === 'HOLD_PENDING') {
+                const targetPig = interactionSession.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+                if (!targetPig) return;
                 interactionSession.currentScreen = { x: e.clientX, y: e.clientY };
                 const moveDistFromStart = Math.hypot(
                     e.clientX - interactionSession.startScreen.x,
                     e.clientY - interactionSession.startScreen.y
                 );
 
-                // If user swipes or circles rapidly before long-press completes -> switch to Touch Rubbing (手機轉圈/滑動撫摸)
                 if (moveDistFromStart > 16) {
                     hideHoldRing();
                     interactionSession.mode = 'RUB_TOUCH';
@@ -3015,35 +3190,40 @@
                 }
             }
 
-            // CASE C: Active Touch Rubbing / Circling on Pig (手機或觸控滑動撫摸)
-            if (interactionSession.mode === 'RUB_TOUCH' && pig) {
-                renderer.domElement.style.cursor = 'grab';
-                const pigHits = raycaster.intersectObject(pig.bodyMesh, false);
-                if (pigHits.length > 0 && screenSpeed > 1.2) {
-                    applyContinuousRubbingHit(pigHits[0], Math.max(screenSpeed, 8));
+            // CASE C: Active Touch Rubbing / Circling on Pig
+            if (interactionSession.mode === 'RUB_TOUCH') {
+                const targetPig = interactionSession.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+                if (targetPig) {
+                    renderer.domElement.style.cursor = 'grab';
+                    const pigHits = raycaster.intersectObject(targetPig.bodyMesh, false);
+                    if (pigHits.length > 0 && screenSpeed > 1.2) {
+                        applyContinuousRubbingHit(pigHits[0], Math.max(screenSpeed, 8));
+                    }
                 }
                 return;
             }
 
-            // CASE D: Carrying Pig (Long-Press Grabbed) + Simultaneous Soft-Body Vertex Grip Physics
-            if (interactionSession.mode === 'CARRY_PIG' && pig) {
-                renderer.domElement.style.cursor = 'grabbing';
-                if (raycaster.ray.intersectPlane(dragPlane, planeIntersectPt)) {
-                    const cx = Math.max(-ARENA_HALF + 1.2, Math.min(ARENA_HALF - 1.2, planeIntersectPt.x));
-                    const cz = Math.max(-ARENA_HALF + 1.2, Math.min(ARENA_HALF - 1.2, planeIntersectPt.z));
+            // CASE D: Carrying Pig (Long-Press Grabbed)
+            if (interactionSession.mode === 'CARRY_PIG') {
+                const curPig = interactionSession.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+                if (curPig) {
+                    renderer.domElement.style.cursor = 'grabbing';
+                    if (raycaster.ray.intersectPlane(dragPlane, planeIntersectPt)) {
+                        const cx = Math.max(-ARENA_HALF + 1.2, Math.min(ARENA_HALF - 1.2, planeIntersectPt.x));
+                        const cz = Math.max(-ARENA_HALF + 1.2, Math.min(ARENA_HALF - 1.2, planeIntersectPt.z));
 
-                    const moveDeltaX = cx - pig.body.position.x;
-                    const moveDeltaZ = cz - pig.body.position.z;
+                        const moveDeltaX = cx - curPig.body.position.x;
+                        const moveDeltaZ = cz - curPig.body.position.z;
 
-                    pig.body.position.set(cx, 2.35, cz);
-                    pig.body.velocity.set(moveDeltaX * 14, 0, moveDeltaZ * 14);
+                        curPig.body.position.set(cx, 2.35, cz);
+                        curPig.body.velocity.set(moveDeltaX * 14, 0, moveDeltaZ * 14);
 
-                    // Simultaneously deform the gripped vertices upward and along the drag vector
-                    if (pig.activePinch) {
-                        const pullWorld = pig.root.position.clone().add(
-                            new THREE.Vector3(-moveDeltaX * 1.6, 1.85, -moveDeltaZ * 1.6)
-                        );
-                        pig.updatePinchWorldTarget(pullWorld);
+                        if (curPig.activePinch) {
+                            const pullWorld = curPig.root.position.clone().add(
+                                new THREE.Vector3(-moveDeltaX * 1.6, 1.85, -moveDeltaZ * 1.6)
+                            );
+                            curPig.updatePinchWorldTarget(pullWorld);
+                        }
                     }
                 }
                 return;
@@ -3056,9 +3236,13 @@
                     const it = interactionSession.item;
                     const cx = Math.max(-ARENA_HALF + 0.8, Math.min(ARENA_HALF - 0.8, planeIntersectPt.x));
                     const cz = Math.max(-ARENA_HALF + 0.8, Math.min(ARENA_HALF - 0.8, planeIntersectPt.z));
-                    it.body.position.set(cx, 1.85, cz);
-                    it.body.velocity.set(0, 0, 0);
+                    if (it.body) {
+                        it.body.position.set(cx, 1.65, cz);
+                        it.body.velocity.set(0, 0, 0);
+                        it.body.angularVelocity.set(0, 0, 0);
+                    }
                 }
+                return;
             }
         }
 
@@ -3066,8 +3250,8 @@
             hideHoldRing();
             if (!interactionSession) return;
 
-            if (interactionSession.mode === 'HOLD_PENDING' && pig) {
-                // Quick tap/poke on the pig
+            if (interactionSession.mode === 'HOLD_PENDING') {
+                const targetPig = interactionSession.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
                 const coinGain = getTouchCoinGain();
                 gameState.coins += coinGain;
                 sfx.playOink(1.06 + Math.random() * 0.15);
@@ -3083,19 +3267,26 @@
                     });
                 }
                 updateHUD();
-            } else if (interactionSession.mode === 'CARRY_PIG' && pig) {
-                pig.releasePinch();
-                pig.aiState = 'WANDER';
-                pig.body.velocity.set(0, 0, 0);
-                const p = pig.body.position;
-                Object.values(ZONES).forEach(z => {
-                    if (Math.hypot(p.x - z.pos.x, p.z - z.pos.z) < z.radius) {
-                        spawnFloatingText(`已放置於【${z.name}】`, pig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#38bdf8');
-                        if (z.id === 'BATH') sfx.playSplash();
-                    }
-                });
+            } else if (interactionSession.mode === 'CARRY_PIG') {
+                const curPig = interactionSession.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+                if (curPig) {
+                    curPig.releasePinch();
+                    curPig.aiState = 'WANDER';
+                    curPig.body.velocity.set(0, 0, 0);
+                    const p = curPig.body.position;
+                    Object.values(ZONES).forEach(z => {
+                        if (Math.hypot(p.x - z.pos.x, p.z - z.pos.z) < z.radius) {
+                            spawnFloatingText(`已放置於【${z.name}】`, curPig.root.position.clone().add(new THREE.Vector3(0, 2.4, 0)), '#38bdf8');
+                            if (z.id === 'BATH') sfx.playSplash();
+                        }
+                    });
+                }
             } else if (interactionSession.mode === 'DRAG_ITEM' && interactionSession.item) {
                 const it = interactionSession.item;
+                if (it.body) {
+                    it.body.type = CANNON.Body.DYNAMIC;
+                    it.body.wakeUp();
+                }
                 if (it.type === 'INGREDIENT') {
                     const dFeed = Math.hypot(it.body.position.x - ZONES.FEED.pos.x, it.body.position.z - ZONES.FEED.pos.z);
                     if (dFeed < ZONES.FEED.radius + 0.8) {
@@ -3269,14 +3460,21 @@
             const e = Math.round(gameState.energy);
             const c = Math.round(gameState.cleanliness);
 
-            document.getElementById('label-hunger').textContent = `${h}%`;
-            document.getElementById('bar-hunger').style.width = `${h}%`;
-            document.getElementById('label-mood').textContent = `${m}%`;
-            document.getElementById('bar-mood').style.width = `${m}%`;
-            document.getElementById('label-energy').textContent = `${e}%`;
-            document.getElementById('bar-energy').style.width = `${e}%`;
-            document.getElementById('label-clean').textContent = `${c}%`;
-            document.getElementById('bar-clean').style.width = `${c}%`;
+            const lH = document.getElementById('label-hunger'); if (lH) lH.textContent = `${h}%`;
+            const rH = document.getElementById('ring-hunger'); if (rH) rH.style.strokeDashoffset = `${88 * (1 - h / 100)}`;
+            const bH = document.getElementById('bar-hunger'); if (bH) bH.style.width = `${h}%`;
+
+            const lM = document.getElementById('label-mood'); if (lM) lM.textContent = `${m}%`;
+            const rM = document.getElementById('ring-mood'); if (rM) rM.style.strokeDashoffset = `${88 * (1 - m / 100)}`;
+            const bM = document.getElementById('bar-mood'); if (bM) bM.style.width = `${m}%`;
+
+            const lE = document.getElementById('label-energy'); if (lE) lE.textContent = `${e}%`;
+            const rE = document.getElementById('ring-energy'); if (rE) rE.style.strokeDashoffset = `${88 * (1 - e / 100)}`;
+            const bE = document.getElementById('bar-energy'); if (bE) bE.style.width = `${e}%`;
+
+            const lC = document.getElementById('label-clean'); if (lC) lC.textContent = `${c}%`;
+            const rC = document.getElementById('ring-clean'); if (rC) rC.style.strokeDashoffset = `${88 * (1 - c / 100)}`;
+            const bC = document.getElementById('bar-clean'); if (bC) bC.style.width = `${c}%`;
 
             // Mobile Mini Bars
             const mh = document.getElementById('m-label-hunger');
@@ -4246,12 +4444,65 @@
                 shareModal.classList.remove('hidden');
                 shareModal.classList.add('flex');
             };
-            document.getElementById('btn-open-share').addEventListener('click', openSaveModalFn);
-            document.getElementById('m-btn-save').addEventListener('click', openSaveModalFn);
+            const btnShare = document.getElementById('btn-open-share');
+            if (btnShare) btnShare.addEventListener('click', openSaveModalFn);
+            const mBtnSave = document.getElementById('m-btn-save');
+            if (mBtnSave) mBtnSave.addEventListener('click', openSaveModalFn);
             document.getElementById('btn-close-share').addEventListener('click', () => {
                 shareModal.classList.add('hidden');
                 shareModal.classList.remove('flex');
             });
+
+            // Scene Switcher Navigation Tabs
+            const switchSceneFn = (sceneName) => {
+                if (typeof FarmSystem !== 'undefined') FarmSystem.leaveFarmScene();
+                if (typeof CheemsArena !== 'undefined') {
+                    if (CheemsArena.group) CheemsArena.group.visible = false;
+                    const cheemsHud = document.getElementById('cheems-arena-overlay');
+                    if (cheemsHud) cheemsHud.classList.add('hidden');
+                }
+                if (typeof PixelBattle !== 'undefined') PixelBattle.exit();
+
+                const ranchGroup = scene.getObjectByName('CountrysideEnvironment');
+                const pantry = scene.getObjectByName('PantryStand');
+                document.querySelectorAll('.scene-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+                if (sceneName === 'ranch') {
+                    const btn = document.getElementById('nav-btn-ranch'); if (btn) btn.classList.add('active');
+                    if (ranchGroup) ranchGroup.visible = true;
+                    if (pantry) pantry.visible = true;
+                    if (typeof CameraManager !== 'undefined') CameraManager.resetOverview();
+                } else if (sceneName === 'farm') {
+                    const btn = document.getElementById('nav-btn-farm'); if (btn) btn.classList.add('active');
+                    if (ranchGroup) ranchGroup.visible = false;
+                    if (pantry) pantry.visible = false;
+                    if (typeof FarmSystem !== 'undefined') FarmSystem.enterFarmScene();
+                } else if (sceneName === 'cheems') {
+                    const btn = document.getElementById('nav-btn-cheems'); if (btn) btn.classList.add('active');
+                    if (ranchGroup) ranchGroup.visible = false;
+                    if (pantry) pantry.visible = false;
+                    if (typeof CheemsArena !== 'undefined') {
+                        if (CheemsArena.group) CheemsArena.group.visible = true;
+                        const cheemsHud = document.getElementById('cheems-arena-overlay');
+                        if (cheemsHud) cheemsHud.classList.remove('hidden');
+                        camera.position.set(0, 3.8, 6.2);
+                        controls.target.set(0, 1.2, 0);
+                        controls.update();
+                    }
+                } else if (sceneName === 'pixel') {
+                    const btn = document.getElementById('nav-btn-pixel'); if (btn) btn.classList.add('active');
+                    if (typeof PixelBattle !== 'undefined') PixelBattle.enter();
+                }
+            };
+            window.switchScene = switchSceneFn;
+
+            const nRanch = document.getElementById('nav-btn-ranch'); if (nRanch) nRanch.addEventListener('click', () => switchSceneFn('ranch'));
+            const nFarm = document.getElementById('nav-btn-farm'); if (nFarm) nFarm.addEventListener('click', () => switchSceneFn('farm'));
+            const nCheems = document.getElementById('nav-btn-cheems'); if (nCheems) nCheems.addEventListener('click', () => switchSceneFn('cheems'));
+            const nPixel = document.getElementById('nav-btn-pixel'); if (nPixel) nPixel.addEventListener('click', () => switchSceneFn('pixel'));
+
+            const btnFarmDesktop = document.getElementById('btn-open-farm-desktop');
+            if (btnFarmDesktop) btnFarmDesktop.addEventListener('click', () => switchSceneFn('farm'));
             document.getElementById('btn-copy-save').addEventListener('click', () => {
                 saveTextarea.select();
                 document.execCommand('copy');
@@ -4741,13 +4992,22 @@
             const elapsed = clock.getElapsedTime();
 
             // Check if a stationary finger/cursor is holding down on the pig to complete Long-Press Grab
-            if (interactionSession && interactionSession.mode === 'HOLD_PENDING' && pig) {
-                const elapsedHold = performance.now() - interactionSession.startTime;
-                const progress = elapsedHold / LONG_PRESS_DURATION;
-                showHoldRing(interactionSession.currentScreen.x, interactionSession.currentScreen.y, progress);
-                if (elapsedHold >= LONG_PRESS_DURATION) {
-                    activatePigCarrySession(interactionSession);
+            if (interactionSession && interactionSession.mode === 'HOLD_PENDING') {
+                const curPig = interactionSession.targetPig || (typeof PigManager !== 'undefined' ? PigManager.getActivePigInstance() : pig);
+                if (curPig) {
+                    const elapsedHold = performance.now() - interactionSession.startTime;
+                    const progress = elapsedHold / LONG_PRESS_DURATION;
+                    showHoldRing(interactionSession.currentScreen.x, interactionSession.currentScreen.y, progress);
+                    if (elapsedHold >= LONG_PRESS_DURATION) {
+                        activatePigCarrySession(interactionSession);
+                    }
                 }
+            }
+
+            // Stabilize dragged item physics
+            if (interactionSession && interactionSession.mode === 'DRAG_ITEM' && interactionSession.item && interactionSession.item.body) {
+                interactionSession.item.body.velocity.set(0, 0, 0);
+                interactionSession.item.body.angularVelocity.set(0, 0, 0);
             }
 
             // Step Cannon.js Physics
@@ -4768,6 +5028,16 @@
             // Update 3D Farmland crop growth & autonomous harvesting
             if (typeof FarmSystem !== 'undefined') {
                 FarmSystem.update(dt);
+            }
+
+            // Update Cheems Frog Stress Arena
+            if (typeof CheemsArena !== 'undefined') {
+                CheemsArena.update(dt);
+            }
+
+            // Update 2D Pixel Battle Roguelike Minigame
+            if (typeof PixelBattle !== 'undefined') {
+                PixelBattle.update(dt);
             }
 
             // Smooth Camera Panning & Focusing
@@ -4930,6 +5200,16 @@
             // Initialize UIManager (Roster bar, adopt modal, wardrobe, D-Pad)
             if (typeof UIManager !== 'undefined') {
                 UIManager.init();
+            }
+
+            // Initialize Cheems Frog Stress-Relief Arena
+            if (typeof CheemsArena !== 'undefined') {
+                CheemsArena.init();
+            }
+
+            // Initialize 2D Pixel Battle Roguelike
+            if (typeof PixelBattle !== 'undefined') {
+                PixelBattle.init();
             }
 
             animateLoop();

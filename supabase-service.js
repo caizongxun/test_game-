@@ -15,6 +15,7 @@
     let connectionStatus = 'DISCONNECTED'; // 'CONNECTED' | 'CONNECTING' | 'LOCAL_OFFLINE' | 'DISCONNECTED'
     let onlineUsersCount = 1;
     let lastSyncedCoins = 300;
+    let rpcAvailable = true;
 
     // 事件回調清單
     const listeners = {
@@ -75,6 +76,24 @@
         if (presenceChannel && connectionStatus === 'CONNECTED') {
             presenceChannel.track({ player_name: playerName, online_at: new Date().toISOString() });
         }
+    }
+
+    function unpackPetData(dbRow) {
+        if (!dbRow) return null;
+        const meta = (dbRow.unlocked_recipes && dbRow.unlocked_recipes.__meta) ? dbRow.unlocked_recipes.__meta : {};
+        return {
+            ...dbRow,
+            current_outfit: meta.current_outfit || dbRow.current_outfit || 'none',
+            color: meta.color || dbRow.color || '#ffb6c1',
+            pigs: meta.pigs || dbRow.pigs || null,
+            equipped_weapon: meta.equipped_weapon || dbRow.equipped_weapon || null,
+            equipped_shield: meta.equipped_shield || dbRow.equipped_shield || null,
+            owned_equip: meta.owned_equip || dbRow.owned_equip || null,
+            estate_levels: meta.estate_levels || dbRow.estate_levels || null,
+            unlocked_stages: meta.unlocked_stages || dbRow.unlocked_stages || 1,
+            farm: meta.farm || dbRow.farm || null,
+            pixel_battle: meta.pixel_battle || dbRow.pixel_battle || null
+        };
     }
 
     // 初始化 Supabase 客戶端
@@ -184,7 +203,7 @@
             return {
                 mode: 'CONNECTED',
                 roomCode,
-                petData: activePet
+                petData: unpackPetData(activePet)
             };
         } catch (err) {
             console.error('[Multiplayer] 連線遭遇異常:', err);
@@ -217,8 +236,9 @@
                 },
                 payload => {
                     if (payload.new) {
-                        lastSyncedCoins = payload.new.coins;
-                        notify('stateUpdated', payload.new);
+                        const unpacked = unpackPetData(payload.new);
+                        lastSyncedCoins = unpacked.coins;
+                        notify('stateUpdated', unpacked);
                     }
                 }
             )
@@ -337,52 +357,88 @@
         }
 
         try {
-            // 嘗試呼叫 PostgreSQL 安全交易 RPC: apply_pet_action
-            const { data, error } = await supabaseClient.rpc('apply_pet_action', {
-                p_room_code: currentRoomCode,
-                p_player_name: playerName,
-                p_action_type: actionType,
-                p_coin_delta: Math.round(deltaCoins),
-                p_patch: patchData
-            });
+            // 嘗試呼叫 PostgreSQL 安全交易 RPC: apply_pet_action（若已知未創建則直接跳過避免 400 報錯）
+            if (rpcAvailable) {
+                const { data, error } = await supabaseClient.rpc('apply_pet_action', {
+                    p_room_code: currentRoomCode,
+                    p_player_name: playerName,
+                    p_action_type: actionType,
+                    p_coin_delta: Math.round(deltaCoins),
+                    p_patch: patchData
+                });
 
-            if (!error && data) {
-                lastSyncedCoins = data.coins;
-                return { success: true, serverPet: data };
+                if (!error && data) {
+                    lastSyncedCoins = data.coins;
+                    return { success: true, serverPet: data };
+                } else if (error) {
+                    rpcAvailable = false; // 標記為未部署，後續操作直接走原子 Update 回退，徹底消除 Console 400 警報
+                }
             }
 
-            // 若 RPC 尚未建立，退回直接安全 Update 表格
-            console.warn('[Multiplayer] RPC apply_pet_action 不可用，使用直接 Update 回退:', error);
-            const ALLOWED_PETS_COLUMNS = new Set([
+            // 若直接安全 Update 表格
+            const DB_ALLOWED_COLUMNS = new Set([
                 'coins', 'name', 'weight', 'hunger', 'mood', 'energy', 'cleanliness',
                 'intimacy', 'intimacy_level', 'current_hat', 'current_biome',
                 'unlocked_biomes', 'ing_stock', 'owned_toys', 'active_toys',
-                'upgrade_levels', 'trough_mask', 'unlocked_recipes', 'equipped_weapon',
-                'equipped_shield', 'owned_equip', 'estate_levels', 'unlocked_stages',
-                'current_outfit', 'color', 'pigs'
+                'upgrade_levels', 'trough_mask', 'unlocked_recipes', 'updated_at'
             ]);
-            const directPatch = { updated_at: new Date().toISOString() };
-            for (const key in patchData) {
-                if (ALLOWED_PETS_COLUMNS.has(key)) {
-                    directPatch[key] = patchData[key];
-                }
-            }
-            if (deltaCoins !== 0) {
-                const { data: cur } = await supabaseClient.from('pets').select('coins').eq('room_code', currentRoomCode).maybeSingle();
-                if (cur) {
-                    directPatch.coins = Math.max(0, cur.coins + deltaCoins);
-                }
-            }
-            const updateRes = await supabaseClient.from('pets').update(directPatch).eq('room_code', currentRoomCode).select().maybeSingle();
-            await supabaseClient.from('pet_actions').insert({
-                room_code: currentRoomCode,
-                player_name: playerName,
-                action_type: actionType,
-                delta_coins: deltaCoins,
-                details: patchData
-            });
+            const META_KEYS = new Set([
+                'pigs', 'color', 'current_outfit', 'equipped_weapon', 'equipped_shield',
+                'owned_equip', 'estate_levels', 'unlocked_stages', 'farm', 'pixel_battle'
+            ]);
 
-            return { success: true, serverPet: updateRes.data };
+            const directPatch = { updated_at: new Date().toISOString() };
+            const metaUpdates = {};
+
+            for (const key in patchData) {
+                if (DB_ALLOWED_COLUMNS.has(key)) {
+                    directPatch[key] = patchData[key];
+                } else if (META_KEYS.has(key)) {
+                    metaUpdates[key] = patchData[key];
+                }
+            }
+
+            if (Object.keys(metaUpdates).length > 0) {
+                let recipes = directPatch.unlocked_recipes;
+                if (!recipes) {
+                    try {
+                        const { data: curR } = await supabaseClient.from('pets').select('unlocked_recipes').eq('room_code', currentRoomCode).maybeSingle();
+                        recipes = (curR && curR.unlocked_recipes) ? { ...curR.unlocked_recipes } : {};
+                    } catch (e) {
+                        recipes = {};
+                    }
+                } else {
+                    recipes = { ...recipes };
+                }
+                recipes.__meta = Object.assign({}, recipes.__meta || {}, metaUpdates);
+                directPatch.unlocked_recipes = recipes;
+            }
+
+            if (deltaCoins !== 0) {
+                try {
+                    const { data: cur } = await supabaseClient.from('pets').select('coins').eq('room_code', currentRoomCode).maybeSingle();
+                    if (cur) {
+                        directPatch.coins = Math.max(0, cur.coins + deltaCoins);
+                    }
+                } catch (e) {}
+            }
+
+            const updateRes = await supabaseClient.from('pets').update(directPatch).eq('room_code', currentRoomCode).select().maybeSingle();
+            try {
+                await supabaseClient.from('pet_actions').insert({
+                    room_code: currentRoomCode,
+                    player_name: playerName,
+                    action_type: actionType,
+                    delta_coins: deltaCoins,
+                    details: patchData
+                });
+            } catch (e) {}
+
+            const unpacked = unpackPetData(updateRes.data);
+            if (unpacked && unpacked.coins !== undefined) {
+                lastSyncedCoins = unpacked.coins;
+            }
+            return { success: true, serverPet: unpacked };
         } catch (err) {
             console.error('[Multiplayer] 執行伺服器同步動作失敗:', err);
             return { success: false, error: err };

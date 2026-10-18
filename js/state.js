@@ -47,7 +47,7 @@ const gameState = {
     forgeLevels: { weapon: 0, shield: 0 },
     battlePotions: { potion_atk: 0, potion_def: 0, potion_heal: 1, smoke_bomb: 0, revive_cross: 0 },
     farmland: {
-        unlockedCount: 1,
+        unlockedCount: 2,
         plots: [
             { id: 0, status: 'EMPTY', cropId: null, plantTime: 0, totalSec: 0, watered: false },
             { id: 1, status: 'EMPTY', cropId: null, plantTime: 0, totalSec: 0, watered: false },
@@ -55,7 +55,8 @@ const gameState = {
             { id: 3, status: 'EMPTY', cropId: null, plantTime: 0, totalSec: 0, watered: false },
             { id: 4, status: 'EMPTY', cropId: null, plantTime: 0, totalSec: 0, watered: false },
             { id: 5, status: 'EMPTY', cropId: null, plantTime: 0, totalSec: 0, watered: false }
-        ]
+        ],
+        automation: { autoSower: false, autoSprinkler: false, autoHarvester: false }
     },
     seedInventory: { seed_A: 2, seed_B: 2, seed_C: 1, seed_D: 0, seed_E: 0, seed_F: 0, seed_G: 0, seed_H: 0, seed_I: 0, seed_J: 0 }
 };
@@ -236,9 +237,16 @@ function loadGameState() {
 
             if (data.farmland) {
                 if (typeof data.farmland.unlockedCount === 'number') {
-                    gameState.farmland.unlockedCount = Math.max(1, Math.min(6, data.farmland.unlockedCount));
+                    gameState.farmland.unlockedCount = Math.max(1, data.farmland.unlockedCount);
+                }
+                if (data.farmland.automation) {
+                    gameState.farmland.automation = Object.assign({}, gameState.farmland.automation, data.farmland.automation);
                 }
                 if (Array.isArray(data.farmland.plots)) {
+                    while (gameState.farmland.plots.length < data.farmland.plots.length) {
+                        const newId = gameState.farmland.plots.length;
+                        gameState.farmland.plots.push({ id: newId, status: 'EMPTY', cropId: null, plantTime: 0, totalSec: 0, watered: false });
+                    }
                     data.farmland.plots.forEach((p, idx) => {
                         if (gameState.farmland.plots[idx]) {
                             Object.assign(gameState.farmland.plots[idx], p);

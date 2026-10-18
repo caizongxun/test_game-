@@ -1,0 +1,25 @@
+<svg viewBox="0 0 120 120" class="w-full h-full drop-shadow-md">
+            <!-- Nut Body -->
+            <path d="M33 50 C32 82 52 96 60 102 C68 96 88 82 87 50 Z" fill="#d97706" stroke="#78350f" stroke-width="2.5"/>
+            <!-- Stem -->
+            <path d="M58 24 L62 15" stroke="#451a03" stroke-width="5" stroke-linecap="round"/>
+            <!-- Beret Cap -->
+            <path d="M26 50 C24 24 96 24 94 50 C94 58 26 58 26 50 Z" fill="#78350f" stroke="#451a03" stroke-width="2.5"/>
+            <path d="M36 36 L46 48 M52 30 L64 48 M70 32 L82 48 M46 32 L36 46 M64 30 L52 48 M82 36 L70 48" stroke="#451a03" stroke-width="2" opacity="0.6"/>
+            <g transform="translate(0, 10)">
+              
+        <!-- Cute Chibi Eyes & Blush -->
+        <g class="chibi-2d-face">
+          <ellipse cx="46" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <ellipse cx="74" cy="64" rx="5.5" ry="3" fill="#fb7185" opacity="0.75"/>
+          <circle cx="48" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="46.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="49.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <circle cx="72" cy="57" r="4.3" fill="#18181b"/>
+          <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+          <circle cx="73.5" cy="58.5" r="0.8" fill="#ffffff"/>
+          <path d="M56 61 Q60 65 64 61" fill="none" stroke="#18181b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      
+            </g>
+          </svg>
