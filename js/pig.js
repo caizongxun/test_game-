@@ -8,6 +8,22 @@ const PigGLBLoader = {
     isLoading: false,
     callbacks: [],
 
+    resolveModelUrl() {
+        try {
+            let base = window.location.origin + window.location.pathname;
+            if (!base.endsWith('/')) {
+                if (base.match(/\.[a-zA-Z0-9]+$/)) {
+                    base = base.substring(0, base.lastIndexOf('/') + 1);
+                } else {
+                    base += '/';
+                }
+            }
+            return base + 'chibi-pink-pig.glb';
+        } catch (e) {
+            return 'chibi-pink-pig.glb';
+        }
+    },
+
     load(onReady) {
         if (this.cachedScene) {
             onReady(this.cachedScene.clone(true));
@@ -19,24 +35,37 @@ const PigGLBLoader = {
 
         if (typeof THREE !== 'undefined' && typeof THREE.GLTFLoader !== 'undefined') {
             const loader = new THREE.GLTFLoader();
-            loader.load(
-                'chibi-pink-pig.glb',
-                gltf => {
-                    this.cachedScene = gltf.scene;
-                    this.isLoading = false;
-                    while (this.callbacks.length > 0) {
-                        const cb = this.callbacks.shift();
-                        try { cb(this.cachedScene.clone(true)); } catch (e) { console.error('GLTF load callback error:', e); }
+            const targetUrl = this.resolveModelUrl();
+            console.log('[PigGLBLoader] 載入 Q 版小豬 3D 模型:', targetUrl);
+
+            const tryLoad = (url, fallbackUrl = null) => {
+                loader.load(
+                    url,
+                    gltf => {
+                        console.log('[PigGLBLoader] 成功載入 chibi-pink-pig.glb 模型');
+                        this.cachedScene = gltf.scene;
+                        this.isLoading = false;
+                        while (this.callbacks.length > 0) {
+                            const cb = this.callbacks.shift();
+                            try { cb(this.cachedScene.clone(true)); } catch (e) { console.error('GLTF load callback error:', e); }
+                        }
+                    },
+                    undefined,
+                    err => {
+                        if (fallbackUrl) {
+                            console.warn('[PigGLBLoader] 主要路徑失敗，嘗試備用路徑:', fallbackUrl, err);
+                            tryLoad(fallbackUrl, null);
+                        } else {
+                            console.warn('[PigGLBLoader] 無法載入 chibi-pink-pig.glb，使用程序化高精細模型降級:', err);
+                            this.isLoading = false;
+                        }
                     }
-                },
-                undefined,
-                err => {
-                    console.warn('無法載入 chibi-pink-pig.glb，使用程序化模型降級:', err);
-                    this.isLoading = false;
-                }
-            );
+                );
+            };
+
+            tryLoad(targetUrl, './chibi-pink-pig.glb');
         } else {
-            console.warn('THREE.GLTFLoader 尚未就緒');
+            console.warn('[PigGLBLoader] THREE.GLTFLoader 尚未就緒');
         }
     }
 };
@@ -460,8 +489,14 @@ class PerVertexSoftBodyPig {
 
         this.glbRoot = glbScene;
         this.glbRoot.scale.set(1.0, 1.0, 1.0);
-        this.glbRoot.position.set(0, 1.05, 0);
+        this.glbRoot.position.set(0, 0, 0);
         this.visualGroup.add(this.glbRoot);
+
+        // Adjust accessory mounts to match chibi GLB proportions
+        if (this.hatMount) this.hatMount.position.set(0, 1.08, 0.22);
+        if (this.outfitMount) this.outfitMount.position.set(0, 0.05, 0.05);
+        if (this.weaponMount) this.weaponMount.position.set(1.05, 0.15, 0.45);
+        if (this.shieldMount) this.shieldMount.position.set(-1.05, 0.15, 0.45);
 
         this.glbRoot.traverse(child => {
             if (child.isMesh) {
@@ -501,6 +536,10 @@ class PerVertexSoftBodyPig {
         };
 
         this.setSkinColor(this.pigData.color || '#ffb6c1');
+        if (this.pigData.currentHat) this.setHat(this.pigData.currentHat);
+        if (this.pigData.currentOutfit) this.setOutfit(this.pigData.currentOutfit);
+        if (this.pigData.equippedWeapon) this.setWeapon(this.pigData.equippedWeapon);
+        if (this.pigData.equippedShield) this.setShield(this.pigData.equippedShield);
     }
 
     buildOutfitMount() {
